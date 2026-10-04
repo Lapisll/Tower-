@@ -51,6 +51,38 @@ export const ENEMY_MODELS: Record<EnemyKind, ModelSlot> = {
 export const PROP_MODELS = {
     base: { prefab: 'Models/base', approxHeight: 4.0 } as ModelSlot,
     spawnGate: { prefab: 'Models/spawnGate', approxHeight: 2.6 } as ModelSlot,
+    /** ёлка по краям арены; уже стоит вертикально, автоповорот не нужен */
+    tree: { prefab: 'Models/tree', approxHeight: 2.7, autoOrient: false } as ModelSlot,
+};
+
+/**
+ * Оружие героев — отдельные модели, вырезанные из героя `npm run split-weapon`.
+ * Центр модели — точка хвата; RigAnimator вкладывает её в ладонь.
+ *
+ * follow: 'full' — оружие поворачивается вместе с кистью (валун);
+ *         'position' — идёт за ладонью, но держит свою ориентацию (лук и посох
+ *         так и остаются вертикальными, даже когда рука поднята для выстрела).
+ * euler — доворот в осях модели героя, градусы: им подгоняется наклон.
+ */
+export interface WeaponSlot {
+    prefab: string;
+    hand: 'LeftHand' | 'RightHand';
+    follow: 'full' | 'position';
+    euler: [number, number, number];
+    /** спрятать в момент броска: снаряд полетел, в руке пусто */
+    hideOnRelease?: boolean;
+}
+
+export const WEAPON_MODELS: Record<UnitKind, WeaponSlot> = {
+    archer: { prefab: 'Models/archer_weapon', hand: 'LeftHand', follow: 'position', euler: [0, 0, -8] },
+    bomber: {
+        prefab: 'Models/bomber_weapon',
+        hand: 'RightHand',
+        follow: 'full',
+        euler: [0, 0, 0],
+        hideOnRelease: true,
+    },
+    mage: { prefab: 'Models/mage_weapon', hand: 'RightHand', follow: 'position', euler: [0, 0, 6] },
 };
 
 /**
@@ -91,6 +123,8 @@ export const UI_IMAGES = {
     coin: 'UI/coin',
     /** плашка верхнего HUD, 9-slice */
     hudPlate: 'UI/hud_plate',
+    /** рука-подсказка туториала: палец смотрит вверх, на цель */
+    tutorialHand: 'UI/tutorial_hand',
 };
 
 /**
@@ -104,6 +138,8 @@ export const TEXTURES = {
     roadTop: 'Textures/road_top',
     dirt: 'Textures/dirt',
     water: 'Textures/water',
+    /** рунический круг на слоте, с альфой */
+    slotRing: 'Textures/slot_ring',
 };
 
 /** Портрет героя для карточки магазина. */
@@ -135,9 +171,14 @@ export function preloadModels(onDone: () => void): void {
         ENEMY_MODELS.boss,
         PROP_MODELS.base,
         PROP_MODELS.spawnGate,
+        PROP_MODELS.tree,
         DECOR_MODELS.flower,
         DECOR_MODELS.stone,
         DECOR_MODELS.crystal,
+        // у оружия масштаб не подгоняется: оно в тех же единицах, что и герой
+        { prefab: WEAPON_MODELS.archer.prefab, approxHeight: 0 },
+        { prefab: WEAPON_MODELS.bomber.prefab, approxHeight: 0 },
+        { prefab: WEAPON_MODELS.mage.prefab, approxHeight: 0 },
     ];
     const paths = slots.map((s) => s.prefab).filter((p) => p.length > 0);
 
@@ -232,6 +273,7 @@ export function preloadUiImages(onDone: () => void): void {
         UI_IMAGES.heroMage,
         UI_IMAGES.coin,
         UI_IMAGES.hudPlate,
+        UI_IMAGES.tutorialHand,
     ].filter((p) => p.length > 0);
     if (paths.length === 0) {
         onDone();

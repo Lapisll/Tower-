@@ -1,6 +1,7 @@
-import { Node, Quat, Vec3, math } from 'cc';
+import { MeshRenderer, Node, Quat, SkeletalAnimation, Vec3, instantiate, math } from 'cc';
 import type { UnitKind } from '../../Sim/SimTypes';
 import { RIG } from '../ViewConfig';
+import { WEAPON_MODELS, getPrefab } from '../AssetSlots';
 
 /**
  * Процедурная анимация по костям для моделей с ригом Mixamo (так ригует Tripo).
@@ -42,6 +43,8 @@ const b = new Vec3();
 
 export class RigAnimator {
     private readonly joints: Partial<Record<BoneKey, Joint>> = {};
+    /** оружие в руке и кости, по которым считается ладонь */
+    private weapon: { node: Node; hand: Node; finger: Node | null } | null = null;
 
     private constructor(
         private readonly model: Node,
@@ -58,13 +61,72 @@ export class RigAnimator {
         }
         if (!rig.joints.leftArm || !rig.joints.rightArm) return null;
 
+        // Импорт кладёт в префаб SkeletalAnimation даже без клипов, и по умолчанию
+        // он в «запечённом» режиме: меш берёт позу из текстуры клипов и ИГНОРИРУЕТ
+        // повороты костей — модель навсегда в T-позе. Переводим скиннинг в реалтайм,
+        // тогда меш следует за узлами костей.
+        for (const anim of model.getComponentsInChildren(SkeletalAnimation)) {
+            anim.useBakedAnimation = false;
+        }
+
         rig.lowerArm(rig.joints.leftArm.node, rig.joints.leftFore?.node);
         rig.lowerArm(rig.joints.rightArm.node, rig.joints.rightFore?.node);
         for (const key of keys) {
             const j = rig.joints[key];
             if (j) Quat.copy(j.rest, j.node.rotation);
         }
+        rig.attachWeapon();
         return rig;
+    }
+
+    /**
+     * Вложить оружие в ладонь. Делается после опускания рук: ориентация оружия
+     * задаётся в осях модели героя, а не кости — у Tripo оси костей непредсказуемы.
+     */
+    private attachWeapon(): void {
+        const spec = WEAPON_MODELS[this.kind];
+        const prefab = spec ? getPrefab({ prefab: spec.prefab, approxHeight: 0 }) : null;
+        if (!spec || !prefab) return;
+        const hand = findBone(this.model, spec.hand);
+        if (!hand) return;
+        const finger = findBone(this.model, `${spec.hand}Middle1`);
+
+        const node = new Node('Weapon');
+        const mesh = instantiate(prefab);
+        mesh.setParent(node);
+        for (const mr of mesh.getComponentsInChildren(MeshRenderer)) {
+            mr.shadowCastingMode = MeshRenderer.ShadowCastingMode.ON;
+        }
+        // оружие живёт в узле модели: так оно в тех же единицах и масштабе, что и герой
+        const space = this.model.children[0] ?? this.model;
+        node.setParent(space);
+        this.weapon = { node, hand, finger };
+        this.placeWeapon(0);
+    }
+
+    /** Поставить оружие в ладонь на текущем кадре. */
+    private placeWeapon(attack: number): void {
+        const w = this.weapon;
+        if (!w) return;
+        const spec = WEAPON_MODELS[this.kind];
+
+        // ладонь — между запястьем и основанием среднего пальца
+        Vec3.copy(a, w.hand.worldPosition);
+        if (w.finger) Vec3.lerp(a, a, w.finger.worldPosition, RIG.gripAlongHand);
+        w.node.setWorldPosition(a);
+
+        const space = w.node.parent!;
+        Quat.fromEuler(tmpQ, spec.euler[0], spec.euler[1], spec.euler[2]);
+        if (spec.follow === 'full') {
+            // вместе с кистью: доворот модели поверх поворота кисти относительно покоя
+            Quat.multiply(tmpQ, w.hand.worldRotation, tmpQ);
+            Quat.invert(tmpQ2, space.worldRotation);
+            Quat.multiply(tmpQ, tmpQ2, tmpQ);
+        }
+        w.node.setRotation(tmpQ);
+
+        // валун улетает снарядом — в момент броска рука пустеет до конца замаха
+        if (spec.hideOnRelease) w.node.active = !(attack > RIG.windup && attack < 1);
     }
 
     /**
@@ -86,6 +148,7 @@ export class RigAnimator {
         // от корня к листьям: поворот ребёнка считается от уже повёрнутого родителя
         const order: BoneKey[] = ['spine', 'head', 'leftArm', 'rightArm', 'leftFore', 'rightFore'];
         for (const key of order) this.apply(key, pose[key]);
+        this.placeWeapon(attack);
     }
 
     /**

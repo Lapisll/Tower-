@@ -1,9 +1,12 @@
 {
   "ver": "1.0.27",
   "importer": "image",
-  "imported": false,
+  "imported": true,
   "uuid": "f665bf30-6d69-4943-ba6f-2123f64dc780",
-  "files": [],
+  "files": [
+    ".jpg",
+    ".json"
+  ],
   "subMetas": {
     "6c48a": {
       "importer": "texture",
@@ -23,8 +26,10 @@
         "visible": false
       },
       "ver": "1.0.22",
-      "imported": false,
-      "files": [],
+      "imported": true,
+      "files": [
+        ".json"
+      ],
       "subMetas": {}
     }
   },

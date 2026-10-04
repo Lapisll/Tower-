@@ -1,4 +1,4 @@
-import { Material, Node, Vec3, Vec4, math } from 'cc';
+import { Material, MeshRenderer, Node, Vec3, Vec4, math } from 'cc';
 import { ARENA, PATH, SLOT_POSITIONS } from '../../Sim/Balance';
 
 /** Детерминированный шум по координатам тайла. */
@@ -6,7 +6,7 @@ function hash2(a: number, b: number): number {
     const n = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
     return n - Math.floor(n);
 }
-import { DECOR, PALETTE, PORTAL, TEX_TINT, TILE, UNIT_VIEW, WATER } from '../ViewConfig';
+import { DECOR, PALETTE, PORTAL, SLOT_VIEW, TEX_TINT, TILE, UNIT_VIEW, WATER } from '../ViewConfig';
 import {
     DECOR_MODELS,
     DecorKind,
@@ -38,6 +38,11 @@ export class ArenaView {
     readonly root: Node;
     readonly slotNodes: Node[] = [];
     private readonly slotTaken: boolean[] = [];
+    /** части слота: постамент и круг на нём */
+    private readonly slotParts: { pedestal: Node; ring: Node }[] = [];
+    private ringIdleMat: Material | null = null;
+    private ringHotMat: Material | null = null;
+    private ringAngle = 0;
     /** сколько площадок открыто — остальные спрятаны до своей волны */
     private unlocked = 0;
     private pulse = 0;
@@ -94,31 +99,45 @@ export class ArenaView {
             if (!this.slotTaken[i]) this.paintSlot(i, on);
         }
         if (!on) {
-            for (const pad of this.slotNodes) pad.setScale(1, 1, 1);
+            for (const part of this.slotParts) part.ring.setScale(1, 1, 1);
         }
     }
 
     /** Пульсация подсвеченных площадок: статичную плиту на пёстром поле не видно. */
     tick(dt: number): void {
         this.tickEnvironment(dt);
-        if (!this.pulsing) return;
-        this.pulse += dt * 5;
-        const k = 1 + Math.sin(this.pulse) * 0.12;
+
+        // круги всегда медленно крутятся; когда герой выбран — быстрее и с пульсом
+        this.ringAngle += dt * (this.pulsing ? SLOT_VIEW.ringHotSpin : SLOT_VIEW.ringIdleSpin);
+        if (this.pulsing) this.pulse += dt * SLOT_VIEW.ringHotSpeed;
+        const k = this.pulsing ? 1 + Math.sin(this.pulse) * SLOT_VIEW.ringHotPulse : 1;
         for (let i = 0; i < this.unlocked; i++) {
-            if (this.slotTaken[i]) continue;
-            this.slotNodes[i].setScale(k, 1 + (k - 1) * 2, k);
+            const ring = this.slotParts[i]?.ring;
+            if (!ring || !ring.active) continue;
+            ring.setRotationFromEuler(0, this.ringAngle, 0);
+            ring.setScale(k, 1, k);
         }
     }
 
     private paintSlot(index: number, hot: boolean): void {
-        const node = this.slotNodes[index];
-        if (!node) return;
-        const hex = this.slotTaken[index]
-            ? PALETTE.slotTaken
-            : hot
-              ? PALETTE.slotHover
-              : PALETTE.slotFree;
-        tintShape(node, hex, { unlit: hot });
+        const part = this.slotParts[index];
+        if (!part) return;
+        const taken = this.slotTaken[index];
+        tintShape(part.pedestal, taken ? SLOT_VIEW.pedestalTaken : SLOT_VIEW.pedestalColor);
+
+        const tex = getTexture(TEXTURES.slotRing);
+        if (tex) {
+            // занятый слот без круга: место уже не предлагается
+            part.ring.active = !taken;
+            const mat = hot ? this.ringHotMat : this.ringIdleMat;
+            const mr = part.ring.getComponent(MeshRenderer);
+            if (mr && mat) mr.material = mat;
+        } else {
+            // без текстуры — старая подсветка цветом
+            part.ring.active = false;
+            const hex = taken ? PALETTE.slotTaken : hot ? PALETTE.slotHover : SLOT_VIEW.pedestalColor;
+            tintShape(part.pedestal, hex, { unlit: hot });
+        }
     }
 
     /** Ближайший свободный слот к точке на земле, либо -1. */
@@ -316,19 +335,47 @@ export class ArenaView {
         const holder = new Node('Slots');
         holder.setParent(this.root);
 
+        const tex = getTexture(TEXTURES.slotRing);
+        if (tex) {
+            // два общих материала на все круги: тусклый и яркий (alpha 254 — уже «прозрачный» режим)
+            this.ringIdleMat = createMaterial(0xffffff, { unlit: true, texture: tex, alpha: SLOT_VIEW.ringIdleAlpha });
+            this.ringHotMat = createMaterial(0xffffff, { unlit: true, texture: tex, alpha: 254 });
+        }
+
         SLOT_POSITIONS.forEach((p, i) => {
-            const pad = makeShape(
-                holder,
-                boxMesh(TILE.size * 0.94, UNIT_VIEW.padHeight, TILE.size * 0.94),
-                PALETTE.slotFree,
+            // юнит стоит на верхе постамента — та же высота, что и раньше у плиты,
+            // поэтому UNIT_LEVEL и попадание тапа не меняются
+            const slot = new Node(`Slot${i}`);
+            slot.setParent(holder);
+            slot.setPosition(p.x, TILE.grassY, p.z);
+
+            const pedestal = makeShape(
+                slot,
+                cylinderMesh(SLOT_VIEW.pedestalRadius, UNIT_VIEW.padHeight, 20),
+                SLOT_VIEW.pedestalColor,
                 {
-                    name: `Slot${i}`,
-                    pos: new Vec3(p.x, TILE.grassY + UNIT_VIEW.padHeight / 2, p.z),
+                    name: 'Pedestal',
+                    pos: new Vec3(0, UNIT_VIEW.padHeight / 2, 0),
+                    castShadow: true,
                     receiveShadow: true,
                 }
             );
-            pad.active = false;
-            this.slotNodes.push(pad);
+
+            const ring = makeShape(
+                slot,
+                tileMesh([{ x: 0, z: 0, y: 0, size: SLOT_VIEW.ringSize }]),
+                0xffffff,
+                {
+                    name: 'Ring',
+                    pos: new Vec3(0, UNIT_VIEW.padHeight + 0.015, 0),
+                    material: this.ringIdleMat ?? undefined,
+                }
+            );
+            ring.active = !!this.ringIdleMat;
+
+            slot.active = false;
+            this.slotNodes.push(slot);
+            this.slotParts.push({ pedestal, ring });
             this.slotTaken.push(false);
         });
     }
@@ -436,6 +483,14 @@ export class ArenaView {
             tree.setParent(props);
             tree.setPosition(x, top, z);
             tree.setScale(scale, scale, scale);
+
+            const model = instantiateModel(PROP_MODELS.tree);
+            if (model) {
+                // случайный поворот вокруг оси: одинаковые ёлки не стоят строем
+                model.setRotationFromEuler(0, hash2(c, r) * 360, 0);
+                model.setParent(tree);
+                continue;
+            }
             makeShape(tree, cylinderMesh(0.16, 1.0), 0x5a4632, {
                 name: 'Trunk',
                 pos: new Vec3(0, 0.5, 0),

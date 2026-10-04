@@ -1,0 +1,162 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "49745e7e-f124-417b-b761-d417d393912f",
+  "files": [],
+  "subMetas": {
+    "645f5": {
+      "importer": "gltf-mesh",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@645f5",
+      "displayName": "",
+      "id": "645f5",
+      "name": "tripo_mesh_d77a0785-3f34-4718-bc34-24231954850c.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 5912
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9d1d": {
+      "importer": "gltf-skeleton",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@f9d1d",
+      "displayName": "",
+      "id": "f9d1d",
+      "name": "Armature.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 65
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "02dcd": {
+      "importer": "gltf-embeded-image",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@02dcd",
+      "displayName": "",
+      "id": "02dcd",
+      "name": "golden_armored_dwarf_3d_model_basecolor.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "49745e7e-f124-417b-b761-d417d393912f@02dcd"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2319d": {
+      "importer": "gltf-material",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@2319d",
+      "displayName": "",
+      "id": "2319d",
+      "name": "tripo_mat_d77a0785-3f34-4718-bc34-24231954850c.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "31eee": {
+      "importer": "gltf-scene",
+      "uuid": "49745e7e-f124-417b-b761-d417d393912f@31eee",
+      "displayName": "",
+      "id": "31eee",
+      "name": "bomber.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "golden_armored_dwarf_3d_model_basecolor",
+        "uri": "49745e7e-f124-417b-b761-d417d393912f@02dcd"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "49745e7e-f124-417b-b761-d417d393912f@645f5"
+      ],
+      "skeletons": [
+        "49745e7e-f124-417b-b761-d417d393912f@f9d1d"
+      ],
+      "textures": [
+        "49745e7e-f124-417b-b761-d417d393912f@e39f7"
+      ],
+      "materials": [
+        "49745e7e-f124-417b-b761-d417d393912f@2319d"
+      ],
+      "scenes": [
+        "49745e7e-f124-417b-b761-d417d393912f@31eee"
+      ]
+    }
+  }
+}

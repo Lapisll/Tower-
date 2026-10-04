@@ -2,16 +2,16 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "e5207d26-5344-4ca3-9f6e-e4e8755da029",
+  "uuid": "383a83e8-5489-4231-a0ee-5e7ffbdbe334",
   "files": [
-    ".jpg",
-    ".json"
+    ".json",
+    ".png"
   ],
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "e5207d26-5344-4ca3-9f6e-e4e8755da029@6c48a",
-      "displayName": "road_top",
+      "uuid": "383a83e8-5489-4231-a0ee-5e7ffbdbe334@6c48a",
+      "displayName": "slot_ring",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -19,10 +19,10 @@
         "wrapModeT": "repeat",
         "minfilter": "linear",
         "magfilter": "linear",
-        "mipfilter": "linear",
+        "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "e5207d26-5344-4ca3-9f6e-e4e8755da029",
+        "imageUuidOrDatabaseUri": "383a83e8-5489-4231-a0ee-5e7ffbdbe334",
         "visible": false
       },
       "ver": "1.0.22",
@@ -36,7 +36,7 @@
   "userData": {
     "type": "texture",
     "fixAlphaTransparencyArtifacts": false,
-    "hasAlpha": false,
-    "redirect": "e5207d26-5344-4ca3-9f6e-e4e8755da029@6c48a"
+    "hasAlpha": true,
+    "redirect": "383a83e8-5489-4231-a0ee-5e7ffbdbe334@6c48a"
   }
 }

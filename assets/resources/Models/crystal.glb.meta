@@ -1,0 +1,143 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6",
+  "files": [],
+  "subMetas": {
+    "349e2": {
+      "importer": "gltf-mesh",
+      "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6@349e2",
+      "displayName": "",
+      "id": "349e2",
+      "name": "meshes[0].mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 6400
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a2bb8": {
+      "importer": "gltf-embeded-image",
+      "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6@a2bb8",
+      "displayName": "",
+      "id": "a2bb8",
+      "name": "crystal+cluster+3d+model_basecolor.jpg.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "22f15ab2-a179-476f-a02a-39f07d3874c6@a2bb8"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e3d35": {
+      "importer": "gltf-material",
+      "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6@e3d35",
+      "displayName": "",
+      "id": "e3d35",
+      "name": "tripo_material_202e9dfc-a6a4-494f-8d46-a74cb36dd17e.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "6ce96": {
+      "importer": "gltf-scene",
+      "uuid": "22f15ab2-a179-476f-a02a-39f07d3874c6@6ce96",
+      "displayName": "",
+      "id": "6ce96",
+      "name": "crystal.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "crystal+cluster+3d+model_basecolor.jpg",
+        "uri": "22f15ab2-a179-476f-a02a-39f07d3874c6@a2bb8"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "22f15ab2-a179-476f-a02a-39f07d3874c6@349e2"
+      ],
+      "skeletons": [],
+      "textures": [
+        "22f15ab2-a179-476f-a02a-39f07d3874c6@e39f7"
+      ],
+      "materials": [
+        "22f15ab2-a179-476f-a02a-39f07d3874c6@e3d35"
+      ],
+      "scenes": [
+        "22f15ab2-a179-476f-a02a-39f07d3874c6@6ce96"
+      ]
+    }
+  }
+}

@@ -67,7 +67,7 @@
     "bust": 0.62
   },
   "heroMage": {
-    "prompt": "cute stylized fantasy game character portrait, wise wizard in a long blue robe and tall pointed purple hat, glowing crystal orb staff, purple-blue palette, close-up head and shoulders bust portrait cropped at the chest, no legs, no feet, no ground, no shadow, facing the viewer, chunky proportions, bold clean shapes, vibrant colors, soft rim light, mobile game hero card art, single character only, absolutely no text no letters no frame, plain solid white background",
+    "prompt": "cute stylized fantasy game character portrait, old wizard with a long white beard, dark navy blue robe and pointed hat decorated with small gold stars and crescent moons, gold trims, wooden staff topped with glowing cyan crystals, wise smile, close-up head and shoulders bust portrait cropped at the chest, no legs, no feet, no ground, no shadow, facing the viewer, chunky proportions, bold clean shapes, vibrant colors, soft rim light, mobile game hero card art, single character only, absolutely no text no letters no frame, plain solid white background",
     "width": 256,
     "height": 256,
     "out": "hero_mage",
@@ -134,5 +134,22 @@
     "height": 128,
     "out": "hud_plate",
     "note": "плашка под значения HUD, 9-slice"
+  },
+  "slotRing": {
+    "prompt": "top-down view of a glowing golden magic summoning circle, thin bright rings with small runes and four little diamond accents, soft warm light glow, perfectly centered, symmetrical, empty middle, game effect sprite, pure black background",
+    "width": 256,
+    "height": 256,
+    "out": "slot_ring",
+    "dir": "Textures",
+    "lumaAlpha": true,
+    "note": "рунический круг на свободном слоте"
+  },
+  "tutorialHand": {
+    "prompt": "cartoon white glove hand pointing straight up with the index finger extended, other fingers curled, thick black outline, soft shading, mobile game tutorial pointer icon, single object, no text, plain solid bright green background",
+    "width": 192,
+    "height": 192,
+    "out": "tutorial_hand",
+    "keepLargest": true,
+    "note": "рука-подсказка туториала"
   }
 }

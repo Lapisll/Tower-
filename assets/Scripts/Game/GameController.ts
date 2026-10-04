@@ -195,6 +195,8 @@ export class GameController {
                 this.pendingResult = this.sim.outcome;
                 this.resultDelay = 0.9;
             }
+        } else {
+            this.view.tickIdle(dt);
         }
 
         if (this.pendingResult) {

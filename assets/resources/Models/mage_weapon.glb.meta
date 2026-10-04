@@ -1,0 +1,142 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02",
+  "files": [],
+  "subMetas": {
+    "40586": {
+      "importer": "gltf-embeded-image",
+      "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02@40586",
+      "displayName": "",
+      "id": "40586",
+      "name": "UnnamedImage.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d9e39": {
+      "importer": "gltf-mesh",
+      "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02@d9e39",
+      "displayName": "",
+      "id": "d9e39",
+      "name": "Weapon.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 716
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "44182b4a-5796-4903-80db-1ba26a0cba02@40586"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9419f": {
+      "importer": "gltf-material",
+      "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02@9419f",
+      "displayName": "",
+      "id": "9419f",
+      "name": "Weapon.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "13f88": {
+      "importer": "gltf-scene",
+      "uuid": "44182b4a-5796-4903-80db-1ba26a0cba02@13f88",
+      "displayName": "",
+      "id": "13f88",
+      "name": "mage_weapon.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "uri": "44182b4a-5796-4903-80db-1ba26a0cba02@40586"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "44182b4a-5796-4903-80db-1ba26a0cba02@d9e39"
+      ],
+      "skeletons": [],
+      "textures": [
+        "44182b4a-5796-4903-80db-1ba26a0cba02@e39f7"
+      ],
+      "materials": [
+        "44182b4a-5796-4903-80db-1ba26a0cba02@9419f"
+      ],
+      "scenes": [
+        "44182b4a-5796-4903-80db-1ba26a0cba02@13f88"
+      ]
+    }
+  }
+}

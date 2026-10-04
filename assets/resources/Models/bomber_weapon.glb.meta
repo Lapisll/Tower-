@@ -1,0 +1,142 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb",
+  "files": [],
+  "subMetas": {
+    "40586": {
+      "importer": "gltf-embeded-image",
+      "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@40586",
+      "displayName": "",
+      "id": "40586",
+      "name": "UnnamedImage.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d9e39": {
+      "importer": "gltf-mesh",
+      "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@d9e39",
+      "displayName": "",
+      "id": "d9e39",
+      "name": "Weapon.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 438
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@40586"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9419f": {
+      "importer": "gltf-material",
+      "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@9419f",
+      "displayName": "",
+      "id": "9419f",
+      "name": "Weapon.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "997d8": {
+      "importer": "gltf-scene",
+      "uuid": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@997d8",
+      "displayName": "",
+      "id": "997d8",
+      "name": "bomber_weapon.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "uri": "65b4a742-d2cf-4938-8f94-f9909fbdabfb@40586"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "65b4a742-d2cf-4938-8f94-f9909fbdabfb@d9e39"
+      ],
+      "skeletons": [],
+      "textures": [
+        "65b4a742-d2cf-4938-8f94-f9909fbdabfb@e39f7"
+      ],
+      "materials": [
+        "65b4a742-d2cf-4938-8f94-f9909fbdabfb@9419f"
+      ],
+      "scenes": [
+        "65b4a742-d2cf-4938-8f94-f9909fbdabfb@997d8"
+      ]
+    }
+  }
+}

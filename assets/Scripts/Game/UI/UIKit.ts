@@ -352,9 +352,12 @@ export function slicedImage(
     frame.insetTop = inset;
     frame.insetBottom = inset;
     const sprite = node.addComponent(Sprite);
-    sprite.spriteFrame = frame;
-    sprite.type = Sprite.Type.SLICED;
+    // режим размера — ДО картинки: иначе спрайт подгоняет узел под исходный
+    // размер текстуры (монета 96px вместо 34, рамка 412px вместо 206)
     sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+    sprite.type = Sprite.Type.SLICED;
+    sprite.spriteFrame = frame;
+    transform(node, w, h);
     return node;
 }
 
@@ -363,8 +366,10 @@ export function image(parent: Node, frame: SpriteFrame, w: number, h: number): N
     const node = uiNode('Image', parent);
     transform(node, w, h);
     const sprite = node.addComponent(Sprite);
-    sprite.spriteFrame = frame;
     sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+    sprite.spriteFrame = frame;
+    // на всякий случай возвращаем заданный размер: см. slicedImage
+    transform(node, w, h);
     return node;
 }
 

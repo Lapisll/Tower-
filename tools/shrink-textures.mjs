@@ -19,6 +19,8 @@ import {
     readdirSync,
     copyFileSync,
     mkdirSync,
+    renameSync,
+    statSync,
 } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -128,10 +130,23 @@ async function shrink(file, maxSize) {
     const newBin = Buffer.concat(parts);
     if (json.buffers?.[0]) json.buffers[0].byteLength = newBin.length;
 
+    // метка «уже ужато»: по ней отличаем повторное сжатие от новой модели
+    // под старым именем (у свежего файла из Tripo метки нет)
+    const alreadyShrunk = !!json.asset?.extras?.shrunk;
+    json.asset = { ...json.asset, extras: { ...json.asset?.extras, shrunk: true } };
     const out = buildGlb(json, newBin);
 
     mkdirSync(BACKUP, { recursive: true });
     const backup = join(BACKUP, `${basename(file)}.orig`);
+    // пережимаем из самого оригинала — бэкап тот же, перекладывать нечего
+    const sameAsBackup = existsSync(backup) && readFileSync(backup).equals(original);
+    // производная от исходника (например, герой после split-weapon) — исходник не трогаем
+    const derived = !!json.asset?.extras?.derived;
+    if (existsSync(backup) && !alreadyShrunk && !sameAsBackup && !derived) {
+        // пришла новая модель — старый исходник не затираем, а откладываем с датой
+        const stamp = new Date(statSync(backup).mtimeMs).toISOString().slice(0, 10);
+        renameSync(backup, join(BACKUP, `${basename(file)}.${stamp}.orig`));
+    }
     if (!existsSync(backup)) copyFileSync(file, backup);
     writeFileSync(file, out);
 

@@ -1,0 +1,143 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966",
+  "files": [],
+  "subMetas": {
+    "349e2": {
+      "importer": "gltf-mesh",
+      "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966@349e2",
+      "displayName": "",
+      "id": "349e2",
+      "name": "meshes[0].mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 6384
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "6c01e": {
+      "importer": "gltf-embeded-image",
+      "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966@6c01e",
+      "displayName": "",
+      "id": "6c01e",
+      "name": "cartoon+pine+tree+3d+model_basecolor.jpg.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "d7939dd5-437f-4c34-8a67-62d7969e7966@6c01e"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "6eb70": {
+      "importer": "gltf-material",
+      "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966@6eb70",
+      "displayName": "",
+      "id": "6eb70",
+      "name": "tripo_material_d15887a0-04fd-4b27-a97d-47e33a7abf64.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "74dd3": {
+      "importer": "gltf-scene",
+      "uuid": "d7939dd5-437f-4c34-8a67-62d7969e7966@74dd3",
+      "displayName": "",
+      "id": "74dd3",
+      "name": "tree.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "cartoon+pine+tree+3d+model_basecolor.jpg",
+        "uri": "d7939dd5-437f-4c34-8a67-62d7969e7966@6c01e"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "d7939dd5-437f-4c34-8a67-62d7969e7966@349e2"
+      ],
+      "skeletons": [],
+      "textures": [
+        "d7939dd5-437f-4c34-8a67-62d7969e7966@e39f7"
+      ],
+      "materials": [
+        "d7939dd5-437f-4c34-8a67-62d7969e7966@6eb70"
+      ],
+      "scenes": [
+        "d7939dd5-437f-4c34-8a67-62d7969e7966@74dd3"
+      ]
+    }
+  }
+}

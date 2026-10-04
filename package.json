@@ -12,7 +12,8 @@
     "tripo": "node tools/tripo.mjs",
     "shrink": "node tools/shrink-textures.mjs",
     "ui-art": "node tools/ui-art.mjs",
-    "fix-rig": "node tools/fix-rig.mjs"
+    "fix-rig": "node tools/fix-rig.mjs",
+    "split-weapon": "node tools/split-weapon.mjs"
   },
   "devDependencies": {
     "sharp": "^0.35.4"

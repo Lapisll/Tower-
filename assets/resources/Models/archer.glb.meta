@@ -1,0 +1,162 @@
+{
+  "ver": "2.3.14",
+  "importer": "gltf",
+  "imported": true,
+  "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd",
+  "files": [],
+  "subMetas": {
+    "41167": {
+      "importer": "gltf-mesh",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@41167",
+      "displayName": "",
+      "id": "41167",
+      "name": "tripo_mesh_0f8de36f-e50b-4604-b276-c141fd8b5295.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 6286
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9d1d": {
+      "importer": "gltf-skeleton",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@f9d1d",
+      "displayName": "",
+      "id": "f9d1d",
+      "name": "Armature.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 65
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "0e898": {
+      "importer": "gltf-embeded-image",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@0e898",
+      "displayName": "",
+      "id": "0e898",
+      "name": "fantasy_archer_dwarf_3d_model_basecolor.image",
+      "userData": {
+        "gltfIndex": 0,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": false,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".jpg",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e39f7": {
+      "importer": "texture",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@e39f7",
+      "displayName": "",
+      "id": "e39f7",
+      "name": "UnnamedTexture.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@0e898"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a6339": {
+      "importer": "gltf-material",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@a6339",
+      "displayName": "",
+      "id": "a6339",
+      "name": "tripo_mat_0f8de36f-e50b-4604-b276-c141fd8b5295.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "7f59a": {
+      "importer": "gltf-scene",
+      "uuid": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@7f59a",
+      "displayName": "",
+      "id": "7f59a",
+      "name": "archer.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "fantasy_archer_dwarf_3d_model_basecolor",
+        "uri": "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@0e898"
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@41167"
+      ],
+      "skeletons": [
+        "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@f9d1d"
+      ],
+      "textures": [
+        "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@e39f7"
+      ],
+      "materials": [
+        "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@a6339"
+      ],
+      "scenes": [
+        "c3d4c474-d248-4263-a7ba-85aa38c8e9dd@7f59a"
+      ]
+    }
+  }
+}

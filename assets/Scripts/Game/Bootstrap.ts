@@ -71,6 +71,9 @@ export class Bootstrap extends Component {
         });
 
         this.ui.setWorldCamera(this.rig.camera);
+        this.view.hooks.shake = (s) => this.rig.shake(s);
+        this.view.hooks.coins = (x, z, amount) => this.ui.flyCoins(x, z, amount);
+        this.view.hooks.baseHit = () => this.ui.flashDamage();
         this.game = new GameController(this.arena, this.view, this.ui);
 
         this.syncLayout(true);
@@ -132,6 +135,7 @@ export class Bootstrap extends Component {
     update(dt: number): void {
         if (!this.ready) return;
         this.syncLayout(false);
+        this.rig.tick(dt);
         Audio.tick(dt);
         this.arena.tick(dt);
         this.game.update(dt);

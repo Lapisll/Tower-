@@ -1,6 +1,6 @@
 import { Camera, Color, Node, Vec3, geometry, math } from 'cc';
 import { ARENA } from '../../Sim/Balance';
-import { CAMERA, PALETTE } from '../ViewConfig';
+import { CAMERA, JUICE, PALETTE } from '../ViewConfig';
 
 /**
  * Адаптивная камера.
@@ -13,6 +13,11 @@ export class CameraRig {
     readonly node: Node;
     readonly camera: Camera;
     private lastAspect = -1;
+    /** позиция без тряски — от неё считается смещение */
+    private readonly basePos = new Vec3();
+    /** «травма» камеры 0..1: тряска растёт как её квадрат, мелкие толчки не мельтешат */
+    private trauma = 0;
+    private shakeTime = 0;
 
     constructor(parent: Node) {
         this.node = new Node('MainCamera');
@@ -55,7 +60,7 @@ export class CameraRig {
         const halfFov = math.toRadian(CAMERA.fov) * 0.5;
         const distForH = needH * 0.5 / (Math.tan(halfFov) * freeV);
         const distForW = needW * 0.5 / (Math.tan(halfFov) * aspect * freeH);
-        const dist = Math.max(distForH, distForW) * CAMERA.padding;
+        const dist = Math.max(distForH, distForW) * CAMERA.padding * CAMERA.zoom;
 
         // видимый кусок мира на уровне земли — по нему считаем сдвиг центра,
         // чтобы арена встала в свободную зону, а не под панель магазина
@@ -79,6 +84,28 @@ export class CameraRig {
         );
         this.node.setPosition(pos);
         this.node.lookAt(target);
+        this.basePos.set(pos);
+    }
+
+    /** Толкнуть камеру. Силы складываются, но не выше JUICE.shakeMax. */
+    shake(strength: number): void {
+        this.trauma = Math.min(JUICE.shakeMax, this.trauma + strength);
+    }
+
+    /** Затухание тряски; вызывается каждый кадр. */
+    tick(dt: number): void {
+        if (this.trauma <= 0) return;
+        this.trauma = Math.max(0, this.trauma - JUICE.shakeDecay * dt);
+        this.shakeTime += dt;
+        const k = this.trauma * this.trauma * JUICE.shakeAmplitude;
+        // синусы разных частот вместо random: дрожь плавная, без рывков кадр к кадру
+        const t = this.shakeTime * 38;
+        this.node.setPosition(
+            this.basePos.x + Math.sin(t * 1.1) * k,
+            this.basePos.y + Math.sin(t * 1.7 + 1.3) * k * 0.6,
+            this.basePos.z + Math.sin(t * 0.9 + 2.1) * k
+        );
+        if (this.trauma <= 0) this.node.setPosition(this.basePos);
     }
 
     /**

@@ -2,7 +2,7 @@ import { Node, Vec3, math } from 'cc';
 import type { BattleSim } from '../../Sim/BattleSim';
 import type { EnemyKind, SimEvent, UnitKind } from '../../Sim/SimTypes';
 import { ENEMIES, UNITS } from '../../Sim/Balance';
-import { ANIM, ENEMY_VIEW, FX, PALETTE, RIG, TILE, UNIT_VIEW } from '../ViewConfig';
+import { ANIM, ENEMY_VIEW, FX, JUICE, PALETTE, RIG, TILE, UNIT_VIEW } from '../ViewConfig';
 import { ENEMY_MODELS, UNIT_MODELS, instantiateModel } from '../AssetSlots';
 import { boxMesh, coneMesh, cylinderMesh, makeShape, sphereMesh } from './Prims';
 import { Audio } from '../Services/Audio';
@@ -15,6 +15,17 @@ interface EnemyVisual {
     hpFill: Node;
     maxHp: number;
     kind: EnemyKind;
+    /** сколько осталось от «сплющивания» после удара, сек */
+    punch: number;
+}
+
+/** Куда бой сообщает о событиях, которые видны вне арены (камера, интерфейс). */
+export interface BattleHooks {
+    shake?(strength: number): void;
+    /** враг убит: показать «+N» и пустить монеты в счётчик */
+    coins?(x: number, z: number, amount: number): void;
+    /** враг дошёл до замка */
+    baseHit?(): void;
 }
 
 interface UnitVisual {
@@ -46,7 +57,11 @@ type EffectKind =
     /** осколки смерти: разлетаются с гравитацией */
     | 'debris'
     /** молния мага: просто гаснет */
-    | 'flash';
+    | 'flash'
+    /** искра попадания: летит без гравитации и тает */
+    | 'spark'
+    /** умирающий враг: подскок и проседание, затем удаление */
+    | 'die';
 
 interface Effect {
     kind: EffectKind;
@@ -66,6 +81,8 @@ interface Effect {
  */
 export class BattleView {
     readonly root: Node;
+    /** подписчики на события боя — ставит Bootstrap и GameController */
+    readonly hooks: BattleHooks = {};
     private readonly unitsRoot: Node;
     private readonly enemiesRoot: Node;
     private readonly fxRoot: Node;
@@ -185,6 +202,24 @@ export class BattleView {
 
     // -- синхронизация с симуляцией -----------------------------------------
 
+    /**
+     * Кадр вне боя (магазин, расстановка). Без этого «шлепок» установки замирал
+     * на первом кадре — юнит стоял вытянутым и тёмным до начала волны.
+     */
+    tickIdle(dt: number): void {
+        this.idleTime += dt;
+        this.unitNodes.forEach((vis, slot) => {
+            if (vis.rig) {
+                vis.rig.update(this.idleTime + slot * 1.7, 0);
+                vis.body.setPosition(0, 0, 0);
+            } else {
+                const idle = Math.sin(this.idleTime * ANIM.idleSpeed + slot) * ANIM.idleAmplitude;
+                vis.body.setPosition(0, idle, 0);
+            }
+        });
+        this.updateEffects(dt);
+    }
+
     /** Вызывается каждый кадр после sim.update(dt). */
     sync(sim: BattleSim, dt: number): void {
         this.drained.length = 0;
@@ -204,6 +239,15 @@ export class BattleView {
             const phase = e.dist * ANIM.walkFrequency * heavy;
             v.body.setPosition(0, Math.abs(Math.sin(phase)) * ANIM.walkBob * heavy, 0);
             v.body.setRotationFromEuler(Math.sin(phase * 2) * ANIM.walkLean * heavy, 0, 0);
+
+            // удар: короткое сплющивание — попадание видно, даже если полоска HP мелкая
+            if (v.punch > 0) {
+                v.punch = Math.max(0, v.punch - dt);
+                const k = Math.sin((v.punch / JUICE.hitPunchTime) * Math.PI) * JUICE.hitSquash;
+                v.body.setScale(1 + k * 0.6, 1 - k, 1 + k * 0.6);
+            } else {
+                v.body.setScale(1, 1, 1);
+            }
 
             const ratio = Math.max(0, e.hp / v.maxHp);
             v.hpFill.setScale(ratio, 1, 1);
@@ -377,6 +421,12 @@ export class BattleView {
             case 'spawn': {
                 const enemy = sim.findEnemy(e.id);
                 if (enemy) this.spawnEnemy(e.id, e.kind, enemy.hp, enemy.x, enemy.z);
+                if (e.kind === 'boss') this.hooks.shake?.(JUICE.shakeBossSpawn);
+                break;
+            }
+            case 'damage': {
+                const v = this.enemyVisuals.get(e.id);
+                if (v) v.punch = JUICE.hitPunchTime;
                 break;
             }
             case 'shot': {
@@ -390,6 +440,9 @@ export class BattleView {
             }
             case 'hit':
                 this.burst(e.x, e.z, e.splash > 0 ? e.splash : FX.hitRadius, UNITS[e.kind].tint);
+                this.sparks(e.x, e.z, UNITS[e.kind].tint);
+                // камень метателя бьёт по площади — пусть это чувствуется
+                if (e.splash > 0) this.hooks.shake?.(JUICE.shakeSplash);
                 Audio.play('hit');
                 break;
             case 'beam': {
@@ -400,14 +453,22 @@ export class BattleView {
                 }
                 this.spawnBeam(e.fromX, e.fromZ, e.toX, e.toZ, UNITS[e.kind].tint);
                 this.burst(e.toX, e.toZ, UNITS[e.kind].splashRadius, UNITS[e.kind].tint);
+                this.sparks(e.toX, e.toZ, UNITS[e.kind].tint);
                 Audio.play('bolt');
                 break;
             }
-            case 'kill':
-                this.deathPuff(e.x, e.z);
+            case 'kill': {
+                const v = this.enemyVisuals.get(e.id);
+                const tint = v ? ENEMIES[v.kind].tint : 0xe8e2d6;
+                if (v) this.startDeath(e.id, v);
+                this.deathPuff(e.x, e.z, tint);
+                if (e.bounty > 0) this.hooks.coins?.(e.x, e.z, e.bounty);
                 Audio.play('enemyDie');
                 break;
+            }
             case 'leak':
+                this.hooks.shake?.(JUICE.shakeLeak);
+                this.hooks.baseHit?.();
                 Audio.play('leak');
                 break;
             default:
@@ -467,7 +528,7 @@ export class BattleView {
             { name: 'Fill', pos: new Vec3(0, 0, 0.01), unlit: true }
         );
 
-        this.enemyVisuals.set(id, { node, body, hpFill: fill, maxHp: hp, kind });
+        this.enemyVisuals.set(id, { node, body, hpFill: fill, maxHp: hp, kind, punch: 0 });
     }
 
     // -- эффекты -------------------------------------------------------------
@@ -489,10 +550,56 @@ export class BattleView {
         });
     }
 
-    private deathPuff(x: number, z: number): void {
-        for (let i = 0; i < 5; i++) {
-            const angle = (i / 5) * Math.PI * 2;
-            const node = makeShape(this.fxRoot, boxMesh(0.18, 0.18, 0.18), 0xe8e2d6, {
+    /**
+     * Враг не исчезает в тот же кадр, а «лопается»: узел забираем из списка
+     * живых (симуляция его уже удалила) и доигрываем смерть эффектом.
+     */
+    private startDeath(id: number, v: EnemyVisual): void {
+        this.enemyVisuals.delete(id);
+        const bar = v.hpFill.parent;
+        if (bar) bar.active = false;
+        v.body.setScale(1, 1, 1);
+        this.effects.push({
+            kind: 'die',
+            node: v.node,
+            life: JUICE.dieTime,
+            maxLife: JUICE.dieTime,
+            vel: new Vec3(),
+            grow: 0,
+        });
+    }
+
+    /** Кубики-искры цвета атакующего: читается, кто попал. */
+    private sparks(x: number, z: number, hex: number): void {
+        for (let i = 0; i < JUICE.sparkCount; i++) {
+            const angle = (i / JUICE.sparkCount) * Math.PI * 2 + Math.random() * 0.6;
+            const up = 0.6 + Math.random() * 0.8;
+            const node = makeShape(this.fxRoot, boxMesh(JUICE.sparkSize, JUICE.sparkSize, JUICE.sparkSize), hex, {
+                name: 'Spark',
+                pos: new Vec3(x, TILE.roadY + 0.7, z),
+                unlit: true,
+            });
+            this.effects.push({
+                kind: 'spark',
+                node,
+                life: JUICE.sparkLife,
+                maxLife: JUICE.sparkLife,
+                vel: new Vec3(
+                    Math.cos(angle) * JUICE.sparkSpeed,
+                    up * JUICE.sparkSpeed * 0.5,
+                    Math.sin(angle) * JUICE.sparkSpeed
+                ),
+                grow: 0,
+            });
+        }
+    }
+
+    private deathPuff(x: number, z: number, hex = 0xe8e2d6): void {
+        for (let i = 0; i < JUICE.dieDebris; i++) {
+            const angle = (i / JUICE.dieDebris) * Math.PI * 2;
+            // половина осколков цвета врага, половина светлая — пыль и «куски»
+            const color = i % 2 === 0 ? hex : 0xe8e2d6;
+            const node = makeShape(this.fxRoot, boxMesh(0.18, 0.18, 0.18), color, {
                 name: 'Debris',
                 pos: new Vec3(x, TILE.roadY + 0.5, z),
                 unlit: true,
@@ -537,6 +644,21 @@ export class BattleView {
                 }
                 case 'flash': {
                     fx.node.setScale(1, t, t);
+                    break;
+                }
+                case 'spark': {
+                    const p = fx.node.position;
+                    fx.vel.y -= 4 * dt;
+                    fx.node.setPosition(p.x + fx.vel.x * dt, p.y + fx.vel.y * dt, p.z + fx.vel.z * dt);
+                    fx.node.setScale(t, t, t);
+                    break;
+                }
+                case 'die': {
+                    // сначала подскок-раздувание, потом проседание в землю
+                    const k = 1 - t;
+                    const puff = Math.sin(Math.min(1, k * 2.2) * Math.PI) * 0.25;
+                    const sink = Math.max(0, k - 0.35) / 0.65;
+                    fx.node.setScale(1 + puff, Math.max(0.01, (1 + puff) * (1 - sink)), 1 + puff);
                     break;
                 }
                 case 'pop': {

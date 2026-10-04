@@ -6,6 +6,7 @@ import {
     Label,
     Node,
     Sprite,
+    UIOpacity,
     UITransform,
     Vec3,
     Widget,
@@ -13,7 +14,7 @@ import {
 } from 'cc';
 import type { UnitKind } from '../../Sim/SimTypes';
 import { SYNERGY, UNITS, UNIT_ORDER, WAVES } from '../../Sim/Balance';
-import { UI } from '../ViewConfig';
+import { JUICE, UI } from '../ViewConfig';
 import { STRINGS } from '../Strings';
 import { UI_IMAGES, getSprite, heroPortraitPath, unitIconPath } from '../AssetSlots';
 import {
@@ -78,6 +79,27 @@ export class GameUI {
 
     private hudPanel!: Node;
     private coinsLabel!: Label;
+    /** иконка монеты в HUD — сюда летят монеты за убийства */
+    private hudCoin: Node | null = null;
+    /** число на счётчике; во время боя растёт по прилёту монет */
+    private shownCoins = 0;
+    /** меняется при setCoins: монеты, вылетевшие до этого, уже ничего не добавят */
+    private coinEpoch = 0;
+    private coinPunch = 0;
+    private fxLayer!: Node;
+    private damageFlash!: UIOpacity;
+    private damageGraphics: Graphics | null = null;
+    private damageTimer = 0;
+    private readonly flyers: {
+        node: Node;
+        from: Vec3;
+        to: Vec3;
+        t: number;
+        dur: number;
+        add: number;
+        epoch: number;
+    }[] = [];
+    private readonly popups: { node: Node; fade: UIOpacity; t: number; y0: number }[] = [];
     private waveLabel!: Label;
     private wavePhaseLabel!: Label;
     private baseBar!: BarHandle;
@@ -121,6 +143,7 @@ export class GameUI {
         this.buildHud();
         this.buildShop();
         this.buildBanner();
+        this.buildFxLayer();
         this.buildOverlay();
         this.buildHand();
     }
@@ -136,6 +159,7 @@ export class GameUI {
         if (ui) ui.setContentSize(visible.width, visible.height);
         this.camera.orthoHeight = visible.height / 2;
         for (const w of this.root.getComponentsInChildren(Widget)) w.updateAlignment();
+        this.redrawDamageFlash();
     }
 
     setWorldCamera(camera: Camera): void {
@@ -149,6 +173,16 @@ export class GameUI {
         this.handNode.layer = this.root.layer;
         this.handNode.setParent(this.root);
         transform(this.handNode, 80, 80);
+
+        const art = getSprite(UI_IMAGES.tutorialHand);
+        if (art) {
+            // кончик пальца — у верхнего края картинки: сдвигаем её вниз,
+            // чтобы в точку цели указывал именно палец, а не центр ладони
+            const hand = image(this.handNode, art, UI.handSize, UI.handSize);
+            hand.setPosition(UI.handSize * 0.08, -UI.handSize * 0.42, 0);
+            this.handNode.active = false;
+            return;
+        }
 
         const g = this.handNode.addComponent(Graphics);
         // кружок-«палец» с хвостиком — читается на любом фоне и не требует картинки
@@ -218,7 +252,10 @@ export class GameUI {
             this.hudFrame.setSiblingIndex(0);
         }
         const coinArt = getSprite(UI_IMAGES.coin);
-        if (coinArt) image(this.hudPanel, coinArt, 40, 40).setPosition(-262, 6, 0);
+        if (coinArt) {
+            this.hudCoin = image(this.hudPanel, coinArt, 40, 40);
+            this.hudCoin.setPosition(-262, 6, 0);
+        }
 
         const coins = label(this.hudPanel, '500', { size: 38, bold: true, color: UI.colors.accent });
         coins.node.setPosition(-190, 6, 0);
@@ -243,7 +280,155 @@ export class GameUI {
     }
 
     setCoins(value: number): void {
-        this.coinsLabel.string = String(Math.max(0, Math.round(value)));
+        this.shownCoins = Math.max(0, Math.round(value));
+        this.coinEpoch++;
+        this.coinsLabel.string = String(this.shownCoins);
+    }
+
+    // -- сочность: монеты, всплывашки, вспышка урона ---------------------------
+
+    /** Слой эффектов: над HUD и магазином, но под финальным экраном и рукой. */
+    private buildFxLayer(): void {
+        this.fxLayer = new Node('FxLayer');
+        this.fxLayer.layer = this.root.layer;
+        this.fxLayer.setParent(this.root);
+
+        // вспышка урона — красная рамка по краям экрана, середина прозрачная
+        const flash = new Node('DamageFlash');
+        flash.layer = this.root.layer;
+        flash.setParent(this.fxLayer);
+        transform(flash, 10, 10);
+        this.damageGraphics = flash.addComponent(Graphics);
+        this.damageFlash = flash.addComponent(UIOpacity);
+        this.damageFlash.opacity = 0;
+        this.redrawDamageFlash();
+    }
+
+    /** Рамку рисуем по реальному видимому размеру: в ландшафте он другой. */
+    private redrawDamageFlash(): void {
+        if (!this.damageGraphics) return;
+        const size = view.getVisibleSize();
+        const hw = size.width / 2;
+        const hh = size.height / 2;
+        const edge = Math.min(hw, hh) * 0.28;
+        const g = this.damageGraphics;
+        g.clear();
+        g.fillColor = hexColor(UI.colors.bad, JUICE.damageFlashAlpha);
+        g.rect(-hw, hh - edge, hw * 2, edge);
+        g.rect(-hw, -hh, hw * 2, edge);
+        g.rect(-hw, -hh + edge, edge, hh * 2 - edge * 2);
+        g.rect(hw - edge, -hh + edge, edge, hh * 2 - edge * 2);
+        g.fill();
+    }
+
+    /** Враг дошёл до замка: красная вспышка по краям. */
+    flashDamage(): void {
+        this.damageTimer = JUICE.damageFlashTime;
+    }
+
+    /**
+     * Убийство: «+N» над врагом и несколько монет, летящих дугой в счётчик.
+     * Число на счётчике растёт по мере прилёта — награда видна сразу, а не в конце волны.
+     */
+    flyCoins(worldX: number, worldZ: number, amount: number): void {
+        if (!this.worldCamera) {
+            this.setCoins(this.shownCoins + amount);
+            return;
+        }
+        const screenPt = new Vec3();
+        this.worldCamera.worldToScreen(new Vec3(worldX, 1.4, worldZ), screenPt);
+        const from = new Vec3();
+        this.camera.screenToWorld(screenPt, from);
+        from.z = 0;
+
+        const popup = label(this.fxLayer, `+${amount}`, {
+            size: 34,
+            bold: true,
+            color: UI.colors.accent,
+            outline: 4,
+        });
+        popup.node.setWorldPosition(from);
+        // гасим всю надпись целиком: у Label отдельно гаснет текст, а обводка висела бы призраком
+        const fade = popup.node.addComponent(UIOpacity);
+        this.popups.push({ node: popup.node, fade, t: 0, y0: popup.node.position.y });
+
+        const art = getSprite(UI_IMAGES.coin);
+        const target = (this.hudCoin ?? this.coinsLabel.node).getWorldPosition();
+        const n = art ? Math.max(1, JUICE.coinsPerKill) : 1;
+        let left = amount;
+        for (let i = 0; i < n; i++) {
+            const add = i === n - 1 ? left : Math.floor(amount / n);
+            left -= add;
+            const node = art ? image(this.fxLayer, art, JUICE.coinSize, JUICE.coinSize) : new Node('Coin');
+            if (!art) {
+                node.layer = this.root.layer;
+                node.setParent(this.fxLayer);
+            }
+            node.setWorldPosition(from);
+            this.flyers.push({
+                node,
+                from: from.clone(),
+                to: target.clone(),
+                // монеты стартуют вразнобой — летят «струйкой», а не одним комком
+                t: -i * 0.07,
+                dur: JUICE.coinFlyTime * (0.9 + Math.random() * 0.2),
+                add,
+                epoch: this.coinEpoch,
+            });
+        }
+    }
+
+    private updateJuice(dt: number): void {
+        for (let i = this.flyers.length - 1; i >= 0; i--) {
+            const f = this.flyers[i];
+            f.t += dt;
+            const k = Math.max(0, Math.min(1, f.t / f.dur));
+            const e = k * k; // разгон к счётчику
+            // дуга: квадратичная кривая через точку выше середины
+            const mx = (f.from.x + f.to.x) / 2 + (f.from.x < f.to.x ? -80 : 80);
+            const my = Math.max(f.from.y, f.to.y) + 120;
+            const x = (1 - e) * (1 - e) * f.from.x + 2 * (1 - e) * e * mx + e * e * f.to.x;
+            const y = (1 - e) * (1 - e) * f.from.y + 2 * (1 - e) * e * my + e * e * f.to.y;
+            f.node.setWorldPosition(x, y, 0);
+            const s = f.t < 0 ? 0 : 1 - e * 0.35;
+            f.node.setScale(s, s, 1);
+            if (k >= 1) {
+                f.node.destroy();
+                this.flyers.splice(i, 1);
+                // волна могла закончиться, пока монета летела, — тогда счётчик уже верный
+                if (f.epoch === this.coinEpoch) {
+                    this.shownCoins += f.add;
+                    this.coinsLabel.string = String(this.shownCoins);
+                    this.coinPunch = 0.18;
+                }
+            }
+        }
+
+        for (let i = this.popups.length - 1; i >= 0; i--) {
+            const p = this.popups[i];
+            p.t += dt;
+            const k = p.t / JUICE.popupLife;
+            const pos = p.node.position;
+            p.node.setPosition(pos.x, p.y0 + JUICE.popupRise * (1 - (1 - k) * (1 - k)), 0);
+            const s = k < 0.15 ? 0.6 + (k / 0.15) * 0.6 : 1.2 - Math.min(0.2, (k - 0.15) * 0.4);
+            p.node.setScale(s, s, 1);
+            p.fade.opacity = Math.round(255 * Math.max(0, Math.min(1, (1 - k) * 2.5)));
+            if (k >= 1) {
+                p.node.destroy();
+                this.popups.splice(i, 1);
+            }
+        }
+
+        // счётчик «подпрыгивает» на каждой прилетевшей монете
+        if (this.coinPunch > 0) this.coinPunch = Math.max(0, this.coinPunch - dt);
+        const punch = 1 + Math.sin((this.coinPunch / 0.18) * Math.PI) * 0.25;
+        this.coinsLabel.node.setScale(punch, punch, 1);
+        if (this.hudCoin) this.hudCoin.setScale(punch, punch, 1);
+
+        if (this.damageTimer > 0) {
+            this.damageTimer = Math.max(0, this.damageTimer - dt);
+            this.damageFlash.opacity = Math.round(255 * (this.damageTimer / JUICE.damageFlashTime));
+        }
     }
 
     setWave(index: number, phase: string): void {
@@ -612,6 +797,7 @@ export class GameUI {
 
     update(dt: number): void {
         this.updateHand(dt);
+        this.updateJuice(dt);
         if (this.bannerTimer > 0) {
             this.bannerTimer -= dt;
             const t = Math.max(0, this.bannerTimer);

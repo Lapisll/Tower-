@@ -213,6 +213,8 @@ async function generate(name, keepBg) {
     const file = join(outDir, `${entry.out}.${ext}`);
     const processed = entry.tile
         ? await makeTileable(buf, entry.width, entry.tile)
+        : entry.lumaAlpha
+        ? await lumaToAlpha(buf, entry.width, entry.height)
         : keepBg
         ? await sharp(buf).resize(entry.width, entry.height, { fit: 'inside' }).png().toBuffer()
         : await cutBackground(buf, entry.width, entry.height, entry);
@@ -398,6 +400,34 @@ async function makeTileable(buf, size, mode) {
     }
     // JPEG: альфа текстуре земли не нужна, а весит она втрое меньше PNG
     return sharp(out, { raw: { width: n, height: n, channels: ch } }).jpeg({ quality: 82 }).toBuffer();
+}
+
+/**
+ * Свечение на чёрном фоне -> прозрачность по яркости (опция lumaAlpha).
+ * Вырезка заливкой дала бы резкий край и съела бы мягкое затухание glow;
+ * здесь альфа = яркость пикселя, а цвет «разбавляется» обратно до полного.
+ */
+async function lumaToAlpha(buf, width, height) {
+    const { data, info } = await sharp(buf)
+        .resize(width, height, { fit: 'cover' })
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+    const out = Buffer.alloc(info.width * info.height * 4);
+    for (let i = 0, o = 0; i < data.length; i += 3, o += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const a = Math.max(r, g, b);
+        // тёмный шум фона — в ноль, иначе по краю останется серая дымка
+        const alpha = a < 24 ? 0 : a;
+        const k = alpha > 0 ? 255 / alpha : 0;
+        out[o] = Math.min(255, Math.round(r * k));
+        out[o + 1] = Math.min(255, Math.round(g * k));
+        out[o + 2] = Math.min(255, Math.round(b * k));
+        out[o + 3] = alpha;
+    }
+    return sharp(out, { raw: { width: info.width, height: info.height, channels: 4 } })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
 }
 
 /** Оставить в маске только самую крупную связную область рисунка. */
