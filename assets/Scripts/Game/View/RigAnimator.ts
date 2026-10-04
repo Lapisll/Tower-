@@ -1,5 +1,5 @@
 import { MeshRenderer, Node, Quat, SkeletalAnimation, Vec3, instantiate, math } from 'cc';
-import type { UnitKind } from '../../Sim/SimTypes';
+import type { EnemyKind, UnitKind } from '../../Sim/SimTypes';
 import { RIG } from '../ViewConfig';
 import { WEAPON_MODELS, getPrefab } from '../AssetSlots';
 
@@ -22,8 +22,6 @@ interface Joint {
     rest: Quat;
 }
 
-type Pose = Partial<Record<'spine' | 'head' | 'leftArm' | 'rightArm' | 'leftFore' | 'rightFore', Vec3>>;
-
 const BONES = {
     spine: 'Spine1',
     head: 'Head',
@@ -31,7 +29,13 @@ const BONES = {
     rightArm: 'RightArm',
     leftFore: 'LeftForeArm',
     rightFore: 'RightForeArm',
+    leftUpLeg: 'LeftUpLeg',
+    rightUpLeg: 'RightUpLeg',
+    leftLeg: 'LeftLeg',
+    rightLeg: 'RightLeg',
 } as const;
+
+type Pose = Partial<Record<keyof typeof BONES, Vec3>>;
 type BoneKey = keyof typeof BONES;
 
 const tmpQ = new Quat();
@@ -48,11 +52,11 @@ export class RigAnimator {
 
     private constructor(
         private readonly model: Node,
-        private readonly kind: UnitKind
+        private readonly kind: UnitKind | EnemyKind
     ) {}
 
-    /** Найти скелет и опустить руки. Нет нужных костей — вернёт null, юнит останется как есть. */
-    static tryCreate(model: Node, kind: UnitKind): RigAnimator | null {
+    /** Найти скелет и опустить руки. Нет нужных костей — вернёт null, модель останется как есть. */
+    static tryCreate(model: Node, kind: UnitKind | EnemyKind): RigAnimator | null {
         const rig = new RigAnimator(model, kind);
         const keys = Object.keys(BONES) as BoneKey[];
         for (const key of keys) {
@@ -84,7 +88,7 @@ export class RigAnimator {
      * задаётся в осях модели героя, а не кости — у Tripo оси костей непредсказуемы.
      */
     private attachWeapon(): void {
-        const spec = WEAPON_MODELS[this.kind];
+        const spec = (WEAPON_MODELS as Partial<Record<string, (typeof WEAPON_MODELS)[UnitKind]>>)[this.kind];
         const prefab = spec ? getPrefab({ prefab: spec.prefab, approxHeight: 0 }) : null;
         if (!spec || !prefab) return;
         const hand = findBone(this.model, spec.hand);
@@ -108,7 +112,7 @@ export class RigAnimator {
     private placeWeapon(attack: number): void {
         const w = this.weapon;
         if (!w) return;
-        const spec = WEAPON_MODELS[this.kind];
+        const spec = WEAPON_MODELS[this.kind as UnitKind];
 
         // ладонь — между запястьем и основанием среднего пальца
         Vec3.copy(a, w.hand.worldPosition);
@@ -132,8 +136,9 @@ export class RigAnimator {
     /**
      * @param time  общее время, со сдвигом на юнита, чтобы не дышали хором
      * @param attack фаза замаха 0..1 (0 — не атакует)
+     * @param aim   0..1 — насколько юнит в боевой стойке (есть цель); пока нужно лучнику
      */
-    update(time: number, attack: number): void {
+    update(time: number, attack: number, aim = 0): void {
         const pose: Pose = {};
         const breath = Math.sin(time * RIG.breathSpeed);
         pose.spine = new Vec3(breath * RIG.breathPitch, 0, 0);
@@ -143,12 +148,90 @@ export class RigAnimator {
         pose.leftArm = new Vec3(sway, 0, 0);
         pose.rightArm = new Vec3(-sway, 0, 0);
 
-        if (attack > 0) this.attackPose(pose, attack);
-
-        // от корня к листьям: поворот ребёнка считается от уже повёрнутого родителя
-        const order: BoneKey[] = ['spine', 'head', 'leftArm', 'rightArm', 'leftFore', 'rightFore'];
-        for (const key of order) this.apply(key, pose[key]);
+        if (this.kind === 'archer') {
+            if (aim > 0.001 || attack > 0) this.archerPose(pose, Math.max(aim, attack > 0 ? 1 : 0), attack);
+        } else if (attack > 0) {
+            this.attackPose(pose, attack);
+        }
+        this.applyPose(pose);
         this.placeWeapon(attack);
+    }
+
+    /**
+     * Лучник стреляет двумя руками. Событие выстрела приходит, когда стрела уже
+     * вылетела, поэтому цикл начинается с отпускания: тетива сорвалась —
+     * рука уходит к луку — натягивает заново и держит до следующего выстрела.
+     * @param a стойка 0..1 (плавный вход/выход)
+     * @param t фаза после выстрела 0..1; 0 — держим натянутым
+     */
+    private archerPose(pose: Pose, a: number, t: number): void {
+        const ease = (k: number) => k * k * (3 - 2 * k);
+        let draw = 1;
+        let kick = 0;
+        if (t > 0) {
+            if (t < RIG.archerRelease) {
+                // срыв: кисть отлетает чуть дальше полного натяжения, лук дёргается
+                const k = t / RIG.archerRelease;
+                draw = 1 + 0.18 * Math.sin(k * Math.PI);
+                kick = Math.sin(k * Math.PI);
+            } else if (t < RIG.archerNock) {
+                // рука идёт обратно к тетиве
+                draw = 1 - ease((t - RIG.archerRelease) / (RIG.archerNock - RIG.archerRelease));
+            } else {
+                // и натягивает заново
+                draw = ease((t - RIG.archerNock) / (1 - RIG.archerNock));
+            }
+        }
+
+        // корпус боком к цели; руки задаются в осях модели, поэтому лук всё равно
+        // смотрит точно на цель, как бы ни был развёрнут торс
+        pose.spine = new Vec3(0, RIG.archerTorsoYaw * a, 0);
+        pose.head = new Vec3(0, RIG.archerHeadYaw * a, 0);
+        pose.leftArm = new Vec3(-RIG.archerBowRaise * a + kick * 6, 0, 0);
+        pose.rightArm = new Vec3(-RIG.archerDrawRaise * a, RIG.archerDrawInward * a, 0);
+        pose.rightFore = new Vec3(0, RIG.archerDrawFold * draw * a, 0);
+    }
+
+    /**
+     * Шаг врага. Фаза — из пройденного пути, как у старой походки: ноги не
+     * скользят, а замедленный магом враг и шагает медленнее.
+     * @param heavy 0..1 — тяжёлые (босс) шагают шире и раскачиваются сильнее
+     */
+    walk(phase: number, heavy: number): void {
+        const s = Math.sin(phase);
+        const c = Math.cos(phase);
+        const swing = RIG.walkLegSwing * (1 + heavy * 0.3);
+        const pose: Pose = {
+            // бедро вперёд-назад, колено сгибается, когда нога уходит назад
+            leftUpLeg: new Vec3(-s * swing, 0, 0),
+            rightUpLeg: new Vec3(s * swing, 0, 0),
+            leftLeg: new Vec3(Math.max(0, s) * RIG.walkKnee, 0, 0),
+            rightLeg: new Vec3(Math.max(0, -s) * RIG.walkKnee, 0, 0),
+            // руки — в противофазе ногам
+            leftArm: new Vec3(s * RIG.walkArmSwing, 0, 0),
+            rightArm: new Vec3(-s * RIG.walkArmSwing, 0, 0),
+            // корпус перекатывается с ноги на ногу и чуть наклонён вперёд
+            spine: new Vec3(RIG.walkLean, c * RIG.walkSway * (1 + heavy), 0),
+            head: new Vec3(-RIG.walkLean * 0.5, -c * RIG.walkSway * 0.5, 0),
+        };
+        this.applyPose(pose);
+    }
+
+    private applyPose(pose: Pose): void {
+        // от корня к листьям: поворот ребёнка считается от уже повёрнутого родителя
+        const order: BoneKey[] = [
+            'spine',
+            'head',
+            'leftArm',
+            'rightArm',
+            'leftFore',
+            'rightFore',
+            'leftUpLeg',
+            'rightUpLeg',
+            'leftLeg',
+            'rightLeg',
+        ];
+        for (const key of order) this.apply(key, pose[key]);
     }
 
     /**

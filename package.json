@@ -13,9 +13,12 @@
     "shrink": "node tools/shrink-textures.mjs",
     "ui-art": "node tools/ui-art.mjs",
     "fix-rig": "node tools/fix-rig.mjs",
-    "split-weapon": "node tools/split-weapon.mjs"
+    "split-weapon": "node tools/split-weapon.mjs",
+    "simplify": "node tools/simplify.mjs",
+    "export-obj": "node tools/export-obj.mjs"
   },
   "devDependencies": {
+    "meshoptimizer": "^1.3.0",
     "sharp": "^0.35.4"
   }
 }

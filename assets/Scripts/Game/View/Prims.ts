@@ -1,4 +1,4 @@
-import { Color, Material, Mesh, MeshRenderer, Node, Texture2D, Vec3, primitives, utils } from 'cc';
+import { Color, Material, Mesh, MeshRenderer, Node, Texture2D, Vec3, gfx, primitives, utils } from 'cc';
 
 /**
  * Примитивы вместо моделей.
@@ -25,13 +25,17 @@ export interface MatOptions {
     vertexColor?: boolean;
     /** полупрозрачный unlit (пена, свечение портала); прозрачность — в alpha */
     alpha?: number;
+    /** аддитивный unlit: свечение складывается со сценой (вспышки, молния) */
+    additive?: boolean;
+    /** без отсечения задних граней: плоскость видна с обеих сторон */
+    doubleSided?: boolean;
 }
 
 export function getMaterial(hex: number, opts: MatOptions = {}): Material {
     const tex = opts.texture ?? null;
     const key =
         `${hex}|${opts.unlit ? 'u' : 's'}|${opts.emissive ?? -1}|${tex ? tex.uuid : '-'}` +
-        `|${opts.vertexColor ? 'vc' : ''}|${opts.alpha ?? 255}`;
+        `|${opts.vertexColor ? 'vc' : ''}|${opts.alpha ?? 255}|${opts.additive ? 'add' : ''}|${opts.doubleSided ? '2s' : ''}`;
     const cached = materialCache.get(key);
     if (cached) return cached;
 
@@ -54,10 +58,13 @@ export function createMaterial(hex: number, opts: MatOptions = {}): Material {
     const mat = new Material();
     mat.initialize({
         effectName: opts.unlit ? 'builtin-unlit' : 'builtin-standard',
-        // у builtin-unlit вторая техника — transparent
-        technique: transparent && opts.unlit ? 1 : 0,
+        // техники builtin-unlit: 0 opaque, 1 transparent, 2 add
+        technique: opts.unlit ? (opts.additive ? 2 : transparent ? 1 : 0) : 0,
         defines,
     });
+    if (opts.doubleSided) {
+        mat.overridePipelineStates({ rasterizerState: { cullMode: gfx.CullMode.NONE } });
+    }
     mat.setProperty('mainColor', colorOf(hex, opts.alpha ?? 255));
     if (tex) mat.setProperty('mainTexture', tex);
     if (!opts.unlit) {
@@ -134,6 +141,19 @@ export function tileMesh(tiles: { x: number; z: number; y: number; size: number 
     });
 
     return utils.MeshUtils.createMesh({ positions, normals, uvs, indices });
+}
+
+/** Вертикальный квадрат в плоскости XY — под спрайты-вспышки, развёрнутые к камере. */
+export function quadMesh(size: number): Mesh {
+    return cachedMesh(`quad:${size}`, () => {
+        const h = size / 2;
+        return {
+            positions: [-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0],
+            normals: [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
+            uvs: [0, 1, 1, 1, 1, 0, 0, 0],
+            indices: [0, 1, 2, 0, 2, 3],
+        };
+    });
 }
 
 /** Затемнить цвет: боковые грани блока должны быть темнее верхней. */

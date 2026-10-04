@@ -349,13 +349,17 @@ export class ArenaView {
             slot.setParent(holder);
             slot.setPosition(p.x, TILE.grassY, p.z);
 
+            // постамент уходит вниз до уровня дороги: у блоков разброс высоты,
+            // и короткий постамент на низком блоке «висел» в воздухе
+            const depth = TILE.grassY - TILE.roadY + 0.1;
+            const pedH = UNIT_VIEW.padHeight + depth;
             const pedestal = makeShape(
                 slot,
-                cylinderMesh(SLOT_VIEW.pedestalRadius, UNIT_VIEW.padHeight, 20),
+                cylinderMesh(SLOT_VIEW.pedestalRadius, pedH, 20),
                 SLOT_VIEW.pedestalColor,
                 {
                     name: 'Pedestal',
-                    pos: new Vec3(0, UNIT_VIEW.padHeight / 2, 0),
+                    pos: new Vec3(0, UNIT_VIEW.padHeight - pedH / 2, 0),
                     castShadow: true,
                     receiveShadow: true,
                 }
@@ -504,15 +508,13 @@ export class ArenaView {
     }
 
     /**
-     * Цветы, камни и кристаллы на травяных блоках. Ставим по центру тайла и
-     * на его реальную высоту: у блоков разброс по высоте, и на общей grassY
-     * декор то тонул бы, то висел. Раскладка детерминированная.
+     * Цветы, камни и кристаллы на травяных блоках. Ставим на реальную высоту
+     * блока (у блоков разброс высоты). Раскладка детерминированная.
+     *  - кристаллы — по четвертям арены, чтобы ни один угол не пустовал;
+     *  - цветы — кучками по 4–6: одиночный цветок с высоты камеры не виден;
+     *  - камни — поштучно.
      */
     private buildDecor(): void {
-        const kinds = Object.keys(DECOR_MODELS) as DecorKind[];
-        const totalWeight = kinds.reduce((sum, k) => sum + DECOR.weights[k], 0);
-        if (totalWeight <= 0 || DECOR.count <= 0) return;
-
         const decor = new Node('Decor');
         decor.setParent(this.root);
 
@@ -521,50 +523,74 @@ export class ArenaView {
             seed = (seed * 1664525 + 1013904223) % 4294967296;
             return seed / 4294967296;
         };
-        const pickKind = (): DecorKind => {
-            let t = rnd() * totalWeight;
-            for (const k of kinds) {
-                t -= DECOR.weights[k];
-                if (t <= 0) return k;
-            }
-            return kinds[kinds.length - 1];
-        };
 
         const { cols, rows, centerZ } = this.grid;
         const size = TILE.size;
         const used = new Set<string>();
         const landmarks = [ARENA.basePos, ARENA.spawnPos];
 
-        let placed = 0;
-        for (let attempt = 0; attempt < DECOR.count * 30 && placed < DECOR.count; attempt++) {
-            const c = Math.floor(rnd() * cols);
-            const r = Math.floor(rnd() * rows);
-            const key = `${c},${r}`;
-            const top = this.grassTop.get(key);
-            if (top === undefined || used.has(key) || this.blocked.has(key)) continue;
+        /** Свободный травяной блок, удовлетворяющий фильтру, или null. */
+        const pickTile = (accept: (x: number, z: number) => boolean) => {
+            for (let attempt = 0; attempt < 400; attempt++) {
+                const c = Math.floor(rnd() * cols);
+                const r = Math.floor(rnd() * rows);
+                const key = `${c},${r}`;
+                const top = this.grassTop.get(key);
+                if (top === undefined || used.has(key) || this.blocked.has(key)) continue;
+                const x = (c - (cols - 1) / 2) * size;
+                const z = centerZ + (r - (rows - 1) / 2) * size;
+                if (!accept(x, z)) continue;
+                if (this.distanceToRoad(x, z) < ARENA.roadWidth / 2 + DECOR.roadGap) continue;
+                if (SLOT_POSITIONS.some((p) => Math.hypot(p.x - x, p.z - z) < DECOR.slotGap)) continue;
+                if (landmarks.some((p) => Math.hypot(p.x - x, p.z - z) < DECOR.landmarkGap)) continue;
+                used.add(key);
+                return { x, z, top };
+            }
+            return null;
+        };
 
-            const x = (c - (cols - 1) / 2) * size;
-            const z = centerZ + (r - (rows - 1) / 2) * size;
-            if (this.distanceToRoad(x, z) < ARENA.roadWidth / 2 + DECOR.roadGap) continue;
-            if (SLOT_POSITIONS.some((p) => Math.hypot(p.x - x, p.z - z) < DECOR.slotGap)) continue;
-            if (landmarks.some((p) => Math.hypot(p.x - x, p.z - z) < DECOR.landmarkGap)) continue;
-
-            const model = instantiateModel(DECOR_MODELS[pickKind()]);
-            if (!model) continue;
-            used.add(key);
-
-            // небольшой сдвиг внутри тайла, чтобы не стояло строем по сетке
-            const jx = (rnd() - 0.5) * size * 0.3;
-            const jz = (rnd() - 0.5) * size * 0.3;
-            const k = 1 + (rnd() * 2 - 1) * DECOR.scaleJitter;
-
-            const holder = new Node('DecorItem');
+        const place = (kind: DecorKind, x: number, y: number, z: number, scale: number) => {
+            const model = instantiateModel(DECOR_MODELS[kind]);
+            if (!model) return;
+            // мелкий декор без тени: её не видно, а рисуется он из-за неё дважды
+            for (const mr of model.getComponentsInChildren(MeshRenderer)) {
+                mr.shadowCastingMode = MeshRenderer.ShadowCastingMode.OFF;
+            }
+            const holder = new Node(`Decor_${kind}`);
             holder.setParent(decor);
-            holder.setPosition(x + jx, top, z + jz);
+            holder.setPosition(x, y, z);
             holder.setRotationFromEuler(0, rnd() * 360, 0);
-            holder.setScale(k, k, k);
+            holder.setScale(scale, scale, scale);
             model.setParent(holder);
-            placed++;
+        };
+        const jitter = () => 1 + (rnd() * 2 - 1) * DECOR.scaleJitter;
+
+        // кристаллы: по четвертям (лево/право × ближняя/дальняя половина)
+        for (const sx of [-1, 1]) {
+            for (const sz of [-1, 1]) {
+                for (let i = 0; i < DECOR.crystalsPerQuadrant; i++) {
+                    const t = pickTile((x, z) => Math.sign(x || 1) === sx && Math.sign(z - centerZ || 1) === sz);
+                    if (t) place('crystal', t.x + (rnd() - 0.5) * 0.3, t.top, t.z + (rnd() - 0.5) * 0.3, jitter());
+                }
+            }
+        }
+
+        // цветы: кучка на одном блоке, цветки разного размера вокруг центра
+        for (let i = 0; i < DECOR.flowerClusters; i++) {
+            const t = pickTile(() => true);
+            if (!t) continue;
+            const [lo, hi] = DECOR.flowersPerCluster;
+            const n = lo + Math.floor(rnd() * (hi - lo + 1));
+            for (let f = 0; f < n; f++) {
+                const angle = (f / n) * Math.PI * 2 + rnd() * 0.8;
+                const rad = f === 0 ? 0 : DECOR.clusterRadius * (0.5 + rnd() * 0.5);
+                place('flower', t.x + Math.cos(angle) * rad, t.top, t.z + Math.sin(angle) * rad, 0.65 + rnd() * 0.4);
+            }
+        }
+
+        for (let i = 0; i < DECOR.stones; i++) {
+            const t = pickTile(() => true);
+            if (t) place('stone', t.x, t.top, t.z, jitter());
         }
     }
 

@@ -355,10 +355,10 @@ async function cutBackground(buf, width, height, opts = {}) {
     return sharp(data, { raw: { width: w, height: h, channels: ch } })
         .png()
         .trim({ threshold: 1 })
-        .resize(width, height, {
-            fit: 'contain',
-            background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
+        // inside, а не contain: contain добивал картинку прозрачными полями до
+        // заданных пропорций, и 9-slice растягивал эти поля — видимая рамка
+        // оставалась крошечной посередине (логотип занимал 25% своего PNG)
+        .resize(width, height, { fit: 'inside' })
         .png({ compressionLevel: 9 })
         .toBuffer();
 }

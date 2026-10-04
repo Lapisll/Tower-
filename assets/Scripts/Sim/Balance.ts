@@ -215,10 +215,6 @@ export function slotsOpenAtWave(waveIndex: number): number {
     return n;
 }
 
-export const SLOT_POSITIONS: Pt[] = SLOT_ANCHORS.map((a) =>
-    PATH.slotPos(a.along, a.side, SLOT_OFFSET)
-);
-
 export const ARENA = {
     /** габариты земли под камеру, в тайлах 1x1 */
     width: 14,
@@ -228,6 +224,53 @@ export const ARENA = {
     spawnPos: PATH_POINTS[0],
     roadWidth: 2,
 };
+
+/**
+ * Площадки ставятся на центр травяного блока у дороги.
+ *
+ * Точка «отступ от дороги» сама по себе не совпадает с сеткой блоков: постамент
+ * оказывался на стыке двух блоков разной высоты (висел в воздухе), а на
+ * внутренних углах поворотов — и вовсе на соседнем отрезке дороги. Поэтому
+ * берём ближайший к ней центр блока, который не дорога (та же проверка, что в
+ * ArenaView) и стоит вплотную к ней, и не занят другой площадкой.
+ */
+function snapSlotToGrass(p: Pt, taken: Pt[]): Pt {
+    const cols = Math.round(ARENA.width);
+    const rows = Math.round(ARENA.depth);
+    const centerZ = (ARENA.spawnPos.z + ARENA.basePos.z) / 2;
+    const half = ARENA.roadWidth / 2;
+    const toPath = (x: number, z: number): number => {
+        let best = Infinity;
+        for (let d = 0; d <= PATH.total; d += 0.25) {
+            const q = PATH.posAt(d);
+            best = Math.min(best, Math.hypot(q.x - x, q.z - z));
+        }
+        return best;
+    };
+    let best: Pt = p;
+    let bestScore = Infinity;
+    for (let c = 1; c < cols - 1; c++) {
+        for (let r = 1; r < rows - 1; r++) {
+            const x = c - (cols - 1) / 2;
+            const z = centerZ + r - (rows - 1) / 2;
+            const dPath = toPath(x, z);
+            // не дорога, но в первом ряду травы у неё — юнит должен доставать до врагов
+            if (dPath <= half || dPath > half + 1.6) continue;
+            if (taken.some((t) => Math.hypot(t.x - x, t.z - z) < 1.5)) continue;
+            const score = Math.hypot(x - p.x, z - p.z);
+            if (score < bestScore) {
+                bestScore = score;
+                best = { x, z };
+            }
+        }
+    }
+    return best;
+}
+
+export const SLOT_POSITIONS: Pt[] = [];
+for (const a of SLOT_ANCHORS) {
+    SLOT_POSITIONS.push(snapSlotToGrass(PATH.slotPos(a.along, a.side, SLOT_OFFSET), SLOT_POSITIONS));
+}
 
 // ─── Прочее ─────────────────────────────────────────────────────────────────
 export const SIM = {

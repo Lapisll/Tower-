@@ -151,5 +151,66 @@
     "out": "tutorial_hand",
     "keepLargest": true,
     "note": "рука-подсказка туториала"
+  },
+  "fxImpact": {
+    "prompt": "bright hit impact flash, white hot center with short sharp golden star spikes radiating outward, soft glow, perfectly centered, game vfx sprite, pure black background",
+    "width": 128,
+    "height": 128,
+    "out": "fx_impact",
+    "dir": "Textures",
+    "lumaAlpha": true,
+    "note": "эффект fx_impact"
+  },
+  "fxElectric": {
+    "prompt": "electric lightning impact burst, bright white core with jagged cyan and violet electric arcs radiating outward, glowing, perfectly centered, game vfx sprite, pure black background",
+    "width": 128,
+    "height": 128,
+    "out": "fx_electric",
+    "dir": "Textures",
+    "lumaAlpha": true,
+    "note": "эффект fx_electric"
+  },
+  "fxDust": {
+    "prompt": "soft round dust cloud puff, light beige smoke ring billowing outward, top-down view, perfectly centered, game vfx sprite, pure black background",
+    "width": 128,
+    "height": 128,
+    "out": "fx_dust",
+    "dir": "Textures",
+    "lumaAlpha": true,
+    "note": "эффект fx_dust"
+  },
+  "hpFrame": {
+    "prompt": "thin horizontal fantasy game health bar frame, dark slate stone with a thin gold rim and small gold end caps, completely empty dark inner slot, very wide and short, single object, absolutely no text, mobile game UI asset, plain solid bright green background",
+    "width": 256,
+    "height": 48,
+    "out": "hp_frame",
+    "dir": "Textures",
+    "keepLargest": true,
+    "note": "рамка HP-бара врага"
+  },
+  "hpSkull": {
+    "prompt": "small menacing horned skull icon, bone white with red glowing eyes, bold outline, mobile game UI icon, single object, no text, plain solid bright green background",
+    "width": 96,
+    "height": 96,
+    "out": "hp_skull",
+    "dir": "Textures",
+    "keepLargest": true,
+    "note": "черепок на HP-баре босса"
+  },
+  "castleIcon": {
+    "prompt": "small fantasy castle tower, grey stone keep with blue conical roofs and a tiny red flag, bold dark outline, isolated object floating, no background tile, no frame, no badge, no shadow, mobile game UI icon, no text, plain solid magenta background",
+    "width": 96,
+    "height": 96,
+    "out": "castle_icon",
+    "keepLargest": true,
+    "note": "иконка замка у HP базы"
+  },
+  "rays": {
+    "prompt": "radial golden light rays burst from the exact center, many alternating thin and wide soft beams spreading to the edges, warm glow in the middle, symmetrical, game background effect, pure black background",
+    "width": 256,
+    "height": 256,
+    "out": "rays",
+    "lumaAlpha": true,
+    "note": "лучи за пэкшотом"
   }
 }

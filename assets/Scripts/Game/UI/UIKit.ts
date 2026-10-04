@@ -16,6 +16,7 @@ import {
     Vec3,
     Widget,
     view,
+    TTFFont,
 } from 'cc';
 import { UI } from '../ViewConfig';
 
@@ -159,6 +160,12 @@ export interface LabelOptions {
     shadow?: boolean;
 }
 
+/** Шрифт всех надписей; ставится после загрузки (Bootstrap). Нет — системный. */
+let gameFont: TTFFont | null = null;
+export function setGameFont(font: TTFFont | null): void {
+    gameFont = font;
+}
+
 export function label(parent: Node, text: string, opts: LabelOptions = {}): Label {
     const node = uiNode('Label', parent);
     const lbl = node.addComponent(Label);
@@ -166,7 +173,14 @@ export function label(parent: Node, text: string, opts: LabelOptions = {}): Labe
     lbl.fontSize = opts.size ?? 30;
     lbl.lineHeight = opts.lineHeight ?? (opts.size ?? 30) * 1.25;
     lbl.color = hexColor(opts.color ?? UI.colors.text);
-    lbl.isBold = opts.bold ?? false;
+    if (gameFont) {
+        // Lilita One сама жирная — синтетический bold поверх неё мажет буквы
+        lbl.useSystemFont = false;
+        lbl.font = gameFont;
+        lbl.isBold = false;
+    } else {
+        lbl.isBold = opts.bold ?? false;
+    }
     lbl.horizontalAlign =
         opts.align === 'left'
             ? Label.HorizontalAlign.LEFT
@@ -361,15 +375,19 @@ export function slicedImage(
     return node;
 }
 
-/** Простая картинка без растяжения пропорций. */
+/**
+ * Картинка, вписанная в w×h с сохранением пропорций. Картинки обрезаны по
+ * содержимому и бывают любой формы (рука 78×192, портрет 256×187) — растянуть
+ * их в квадрат значило бы сплющить.
+ */
 export function image(parent: Node, frame: SpriteFrame, w: number, h: number): Node {
     const node = uiNode('Image', parent);
-    transform(node, w, h);
     const sprite = node.addComponent(Sprite);
     sprite.sizeMode = Sprite.SizeMode.CUSTOM;
     sprite.spriteFrame = frame;
-    // на всякий случай возвращаем заданный размер: см. slicedImage
-    transform(node, w, h);
+    const src = frame.originalSize;
+    const k = src.width > 0 && src.height > 0 ? Math.min(w / src.width, h / src.height) : 1;
+    transform(node, src.width > 0 ? src.width * k : w, src.height > 0 ? src.height * k : h);
     return node;
 }
 

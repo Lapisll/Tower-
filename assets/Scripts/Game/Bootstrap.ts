@@ -12,6 +12,8 @@ import {
     director,
     input,
     screen,
+    TTFFont,
+    resources,
 } from 'cc';
 import { CAMERA, LIGHT, UNIT_LEVEL } from './ViewConfig';
 import { ARENA } from '../Sim/Balance';
@@ -20,7 +22,8 @@ import { ArenaView } from './View/ArenaView';
 import { BattleView } from './View/BattleView';
 import { CameraRig } from './View/CameraRig';
 import { GameUI } from './UI/GameUI';
-import { applyResolution } from './UI/UIKit';
+import { applyResolution, setGameFont } from './UI/UIKit';
+import { showSplash } from './UI/Splash';
 import { GameController } from './GameController';
 import { CtaService } from './Services/CtaService';
 import { Audio } from './Services/Audio';
@@ -45,11 +48,28 @@ export class Bootstrap extends Component {
     private ready = false;
     private readonly groundPoint = new Vec3();
 
+    private splash: Node | null = null;
+
     onLoad(): void {
         CtaService.notifyReady();
         Audio.init();
-        // ассетов может не быть вовсе — тогда колбэки вызовутся сразу
-        preloadModels(() => preloadUiImages(() => preloadTextures(() => this.build())));
+        // пока грузятся ассеты, сразу показываем экран — иначе секунды серой пустоты
+        this.splash = showSplash(this.node);
+        // группы грузятся параллельно, а не по очереди
+        let left = 4;
+        const done = () => {
+            if (--left > 0) return;
+            this.splash?.destroy();
+            this.splash = null;
+            this.build();
+        };
+        preloadModels(done);
+        preloadUiImages(done);
+        preloadTextures(done);
+        resources.load('Fonts/LilitaOne', TTFFont, (err, font) => {
+            setGameFont(err ? null : font);
+            done();
+        });
     }
 
     private build(): void {

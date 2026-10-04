@@ -74,7 +74,8 @@ export interface WeaponSlot {
 }
 
 export const WEAPON_MODELS: Record<UnitKind, WeaponSlot> = {
-    archer: { prefab: 'Models/archer_weapon', hand: 'LeftHand', follow: 'position', euler: [0, 0, -8] },
+    // изгиб лука в модели смотрит в +X; -90° по Y разворачивают его к цели (+Z)
+    archer: { prefab: 'Models/archer_weapon', hand: 'LeftHand', follow: 'position', euler: [0, -90, 0] },
     bomber: {
         prefab: 'Models/bomber_weapon',
         hand: 'RightHand',
@@ -91,9 +92,9 @@ export const WEAPON_MODELS: Record<UnitKind, WeaponSlot> = {
  * груди» для камня и цветка бессмысленна.
  */
 export const DECOR_MODELS = {
-    flower: { prefab: 'Models/flower', approxHeight: 0.55, autoOrient: false } as ModelSlot,
+    flower: { prefab: 'Models/flower', approxHeight: 0.7, autoOrient: false } as ModelSlot,
     stone: { prefab: 'Models/stone', approxHeight: 0.45, autoOrient: false } as ModelSlot,
-    crystal: { prefab: 'Models/crystal', approxHeight: 0.85, autoOrient: false } as ModelSlot,
+    crystal: { prefab: 'Models/crystal', approxHeight: 1.15, autoOrient: false } as ModelSlot,
 };
 export type DecorKind = keyof typeof DECOR_MODELS;
 
@@ -125,6 +126,12 @@ export const UI_IMAGES = {
     hudPlate: 'UI/hud_plate',
     /** рука-подсказка туториала: палец смотрит вверх, на цель */
     tutorialHand: 'UI/tutorial_hand',
+    /** HP базы в HUD: та же рамка и заливка, что у врагов, плюс иконка замка */
+    hpFrame: 'Textures/hp_frame',
+    hpFill: 'Textures/hp_fill',
+    castleIcon: 'UI/castle_icon',
+    /** лучи за логотипом на пэкшоте */
+    rays: 'UI/rays',
 };
 
 /**
@@ -140,6 +147,16 @@ export const TEXTURES = {
     water: 'Textures/water',
     /** рунический круг на слоте, с альфой */
     slotRing: 'Textures/slot_ring',
+    /** спрайты эффектов (альфа = яркость, рисуются аддитивно) */
+    fxImpact: 'Textures/fx_impact',
+    fxElectric: 'Textures/fx_electric',
+    fxDust: 'Textures/fx_dust',
+    /** поперечный градиент свечения для ленты молнии */
+    fxBolt: 'Textures/fx_bolt',
+    /** HP-бар врага: рамка, глянцевая заливка (цвет задаётся материалом), черепок босса */
+    hpFrame: 'Textures/hp_frame',
+    hpFill: 'Textures/hp_fill',
+    hpSkull: 'Textures/hp_skull',
 };
 
 /** Портрет героя для карточки магазина. */
@@ -274,6 +291,10 @@ export function preloadUiImages(onDone: () => void): void {
         UI_IMAGES.coin,
         UI_IMAGES.hudPlate,
         UI_IMAGES.tutorialHand,
+        UI_IMAGES.hpFrame,
+        UI_IMAGES.hpFill,
+        UI_IMAGES.castleIcon,
+        UI_IMAGES.rays,
     ].filter((p) => p.length > 0);
     if (paths.length === 0) {
         onDone();

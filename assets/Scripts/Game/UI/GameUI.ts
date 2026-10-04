@@ -11,10 +11,11 @@ import {
     Vec3,
     Widget,
     view,
+    LabelOutline,
 } from 'cc';
 import type { UnitKind } from '../../Sim/SimTypes';
 import { SYNERGY, UNITS, UNIT_ORDER, WAVES } from '../../Sim/Balance';
-import { JUICE, UI } from '../ViewConfig';
+import { ENEMY_VIEW, JUICE, UI, UNIT_LEVEL } from '../ViewConfig';
 import { STRINGS } from '../Strings';
 import { UI_IMAGES, getSprite, heroPortraitPath, unitIconPath } from '../AssetSlots';
 import {
@@ -124,6 +125,9 @@ export class GameUI {
     private overlaySub!: Label;
     private ctaButton!: ButtonHandle;
     private ctaPulse = 0;
+    private overlayContent: Node | null = null;
+    private raysNode: Node | null = null;
+    private readonly packHeroes: Node[] = [];
 
     private portrait = true;
 
@@ -176,10 +180,12 @@ export class GameUI {
 
         const art = getSprite(UI_IMAGES.tutorialHand);
         if (art) {
-            // кончик пальца — у верхнего края картинки: сдвигаем её вниз,
-            // чтобы в точку цели указывал именно палец, а не центр ладони
+            // кончик пальца — в середине верхнего края картинки (замерено по альфе:
+            // u 0.51, v 0). Сдвигаем картинку так, чтобы кончик пришёлся ровно
+            // в начало узла руки: тогда узел ставится прямо в точку цели
             const hand = image(this.handNode, art, UI.handSize, UI.handSize);
-            hand.setPosition(UI.handSize * 0.08, -UI.handSize * 0.42, 0);
+            const size = hand.getComponent(UITransform)!.contentSize;
+            hand.setPosition(-size.width * UI.handTipU + size.width * 0.5, -size.height * 0.5, 0);
             this.handNode.active = false;
             return;
         }
@@ -211,33 +217,30 @@ export class GameUI {
     private updateHand(dt: number): void {
         if (!this.handTarget || !this.handNode.active) return;
         this.handTime += dt * 4;
-        const bob = Math.sin(this.handTime) * 8;
+        // «тап»: палец касается цели и отходит вниз — в верхней точке он ровно в цели
+        const bob = -Math.abs(Math.sin(this.handTime)) * UI.handTapDepth;
 
         let pos: Vec3 | null = null;
-        // рука всегда ниже цели, иначе закрывает собой надпись, на которую показывает
-        let drop = 34;
         if (this.handTarget.at === 'card') {
             const kind = this.handTarget.kind;
             const card = this.cards.find((c) => c.kind === kind);
-            if (card) {
-                pos = card.node.getWorldPosition();
-                drop = CARD_H * 0.5 + 30;
-            }
+            // в центр портрета — туда и тапают
+            if (card) pos = card.node.getWorldPosition().add3f(0, UI.portraitY, 0);
         } else if (this.handTarget.at === 'start') {
             pos = this.startButton.node.getWorldPosition();
-            drop = 62;
         } else if (this.worldCamera && this.camera) {
-            // мир -> экран -> координаты интерфейса
+            // мир -> экран -> интерфейс. Высота — верх постамента (UNIT_LEVEL):
+            // при наклонной камере точка на другой высоте уезжает по экрану
             const screenPt = new Vec3();
             this.worldCamera.worldToScreen(
-                new Vec3(this.handTarget.x, 0.6, this.handTarget.z),
+                new Vec3(this.handTarget.x, UNIT_LEVEL, this.handTarget.z),
                 screenPt
             );
             pos = new Vec3();
             this.camera.screenToWorld(screenPt, pos);
         }
 
-        if (pos) this.handNode.setWorldPosition(pos.x, pos.y - drop + bob, 0);
+        if (pos) this.handNode.setWorldPosition(pos.x, pos.y + bob, 0);
     }
 
     // -- HUD -----------------------------------------------------------------
@@ -246,37 +249,80 @@ export class GameUI {
         this.hudPanel = panel(this.root, 700, 104, { color: UI.colors.panel, alpha: 225, radius: 24 });
         align(this.hudPanel, { top: 24, centerX: true });
 
+        // плашка волны растянута на весь HUD — на ней же монеты и HP базы
         const plate = getSprite(UI_IMAGES.hudPlate);
         if (plate) {
             this.hudFrame = slicedImage(this.hudPanel, plate, 700, 104, UI.hudPlateInset);
             this.hudFrame.setSiblingIndex(0);
+            this.hudPanel.getComponent(Graphics)?.clear();
         }
+
         const coinArt = getSprite(UI_IMAGES.coin);
         if (coinArt) {
-            this.hudCoin = image(this.hudPanel, coinArt, 40, 40);
-            this.hudCoin.setPosition(-262, 6, 0);
+            this.hudCoin = image(this.hudPanel, coinArt, 50, 50);
+            this.hudCoin.setPosition(-288, 0, 0);
         }
-
-        const coins = label(this.hudPanel, '500', { size: 38, bold: true, color: UI.colors.accent });
-        coins.node.setPosition(-190, 6, 0);
+        const coins = label(this.hudPanel, '500', { size: 40, bold: true, color: UI.colors.accent, outline: 4 });
+        coins.node.setPosition(-212, 0, 0);
         this.coinsLabel = coins;
-        const coinsCap = label(this.hudPanel, STRINGS.gold, { size: 20, color: UI.colors.textDim });
-        coinsCap.node.setPosition(-190, -26, 0);
 
-        const wave = label(this.hudPanel, STRINGS.waveBanner(1), { size: 34, bold: true });
-        wave.node.setPosition(0, 6, 0);
+        const wave = label(this.hudPanel, STRINGS.waveBanner(1), { size: 36, bold: true, outline: 4 });
+        wave.node.setPosition(0, 10, 0);
         this.waveLabel = wave;
         const waveCap = label(this.hudPanel, STRINGS.phasePrepare, { size: 20, color: UI.colors.textDim });
-        waveCap.node.setPosition(0, -26, 0);
+        waveCap.node.setPosition(0, -24, 0);
         this.wavePhaseLabel = waveCap;
 
-        this.baseBar = bar(this.hudPanel, 190, 20, UI.colors.good, 0x0d1220);
-        this.baseBar.node.setPosition(195, 4, 0);
-        this.baseHpLabel = label(this.hudPanel, `${STRINGS.baseLabel} 100`, {
-            size: 20,
-            color: UI.colors.textDim,
-        });
-        this.baseHpLabel.node.setPosition(195, -26, 0);
+        this.baseBar = this.buildBaseBar();
+        this.baseHpLabel = label(this.baseBar.node, '100', { size: 22, bold: true, outline: 3 });
+        this.baseHpLabel.node.setPosition(0, 2, 0);
+    }
+
+    /**
+     * HP базы: та же рамка и глянцевая заливка, что у врагов, и иконка замка.
+     * Нет картинок — старая простая полоска.
+     */
+    private buildBaseBar(): BarHandle {
+        const frameArt = getSprite(UI_IMAGES.hpFrame);
+        const fillArt = getSprite(UI_IMAGES.hpFill);
+        const castle = getSprite(UI_IMAGES.castleIcon);
+        if (!frameArt || !fillArt) {
+            const plain = bar(this.hudPanel, 190, 20, UI.colors.good, 0x0d1220);
+            plain.node.setPosition(195, 4, 0);
+            return plain;
+        }
+        const w = UI.baseBarWidth;
+        const h = w / ENEMY_VIEW.frameAspect;
+        const root = new Node('BaseBar');
+        root.layer = this.hudPanel.layer;
+        root.setParent(this.hudPanel);
+        root.setPosition(350 - 24 - w / 2, 0, 0);
+
+        slicedImage(root, frameArt, w, h, 10);
+        // заливка растёт от левого края паза: якорь слева, ширина = доля HP
+        const slotW = w * ENEMY_VIEW.slotWidth;
+        const fill = new Node('Fill');
+        fill.layer = root.layer;
+        fill.setParent(root);
+        const ft = transform(fill, slotW, h * ENEMY_VIEW.slotHeight);
+        ft.setAnchorPoint(0, 0.5);
+        fill.setPosition(-slotW / 2, h * ENEMY_VIEW.slotOffsetY, 0);
+        const sprite = fill.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.spriteFrame = fillArt;
+        transform(fill, slotW, h * ENEMY_VIEW.slotHeight);
+        sprite.color = hexColor(UI.colors.good);
+
+        if (castle) image(root, castle, 52, 52).setPosition(-w / 2 - 22, 2, 0);
+
+        return {
+            node: root,
+            setRatio: (r: number) => {
+                const k = Math.max(0, Math.min(1, r));
+                transform(fill, slotW * k, h * ENEMY_VIEW.slotHeight);
+                sprite.color = hexColor(k < UI.baseBarLow ? UI.colors.bad : UI.colors.good);
+            },
+        };
     }
 
     setCoins(value: number): void {
@@ -439,7 +485,7 @@ export class GameUI {
     setBaseHp(hp: number, max: number): void {
         const ratio = max > 0 ? hp / max : 0;
         this.baseBar.setRatio(ratio);
-        this.baseHpLabel.string = `${STRINGS.baseLabel} ${Math.max(0, Math.round(hp))}`;
+        this.baseHpLabel.string = `${Math.max(0, Math.round(hp))}`;
     }
 
     // -- магазин -------------------------------------------------------------
@@ -516,12 +562,8 @@ export class GameUI {
             drawUnitGlyph(icon.addComponent(Graphics), kind, stats.tint);
         }
 
-        const title = label(node, stats.title.toUpperCase(), { size: 26, bold: true });
-        title.node.setPosition(0, -14, 0);
-
-        const stat = label(node, statLine(kind), { size: 18, color: UI.colors.textDim, width: CARD_W - 20 });
-        stat.node.setPosition(0, -50, 0);
-
+        // имя и статы на карточке убраны: герой читается по портрету,
+        // а мелкий текст в плейбле никто не читает
         const price = label(node, `${stats.cost}`, { size: 32, bold: true, color: UI.colors.accent });
         const coinArt = getSprite(UI_IMAGES.coin);
         if (coinArt) {
@@ -645,6 +687,10 @@ export class GameUI {
 
     // -- финальный оверлей ---------------------------------------------------
 
+    /**
+     * Пэкшот на весь экран: лучи, крупное название, три героя и кнопка.
+     * Без отдельной карточки — фоном служит затемнённая сцена.
+     */
     private buildOverlay(): void {
         this.overlay = new Node('Overlay');
         this.overlay.layer = this.root.layer;
@@ -652,75 +698,68 @@ export class GameUI {
         align(this.overlay, { centerX: true, centerY: true });
 
         // затемнение во весь экран: панель заведомо больше любого разумного экрана
-        const dim = panel(this.overlay, 3000, 3000, { color: 0x05070d, alpha: 205, radius: 0 });
-        dim.setPosition(0, 0, 0);
+        panel(this.overlay, 3000, 3000, { color: 0x05070d, alpha: 215, radius: 0 });
 
-        const card = panel(this.overlay, 620, 420, { color: UI.colors.panel, radius: 32 });
-        card.setPosition(0, 0, 0);
+        // содержимое — отдельным узлом: в ландшафте его ужимаем целиком
+        const content = new Node('Content');
+        content.layer = this.root.layer;
+        content.setParent(this.overlay);
+        this.overlayContent = content;
 
-        // плашка — подложка, надпись всегда рисуется кодом поверх:
-        // так текст остаётся чётким и переводится без перерисовки картинки
-        const logo = getSprite(UI_IMAGES.logo);
-        if (logo) {
-            const plate = new Node('LogoPlate');
-            plate.layer = card.layer;
-            plate.setParent(card);
-            plate.setPosition(0, 168, 0);
-            const sprite = plate.addComponent(Sprite);
-            sprite.spriteFrame = logo;
-            sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-            transform(plate, 560, 140);
+        const rays = getSprite(UI_IMAGES.rays);
+        if (rays) {
+            this.raysNode = image(content, rays, 980, 980);
+            this.raysNode.setPosition(0, 250, 0);
         }
 
-        const brand = label(card, STRINGS.gameTitle, {
-            size: 46,
+        const brand = label(content, STRINGS.gameTitle, {
+            size: 104,
             bold: true,
             color: UI.colors.accent,
-            outline: 6,
+            outline: 9,
             outlineColor: 0x2a1408,
             shadow: true,
         });
-        brand.node.setPosition(0, 168, 0);
+        brand.node.setPosition(0, 330, 0);
 
-        if (!logo) {
-            // без плашки заголовку нужна хоть какая-то опора
-            const deco = new Node('Deco');
-            deco.layer = card.layer;
-            deco.setParent(card);
-            deco.setPosition(0, 138, 0);
-            transform(deco, 520, 12);
-            const dg = deco.addComponent(Graphics);
-            dg.fillColor = hexColor(UI.colors.accentDark);
-            for (const sign of [-1, 1]) {
-                dg.roundRect(sign * 90, -3, sign * 150, 6, 3);
-                dg.fill();
-            }
-            dg.circle(0, 0, 6);
-            dg.fill();
-        }
+        // три героя покачиваются под названием — пэкшот не пустой
+        const kinds: UnitKind[] = ['archer', 'bomber', 'mage'];
+        kinds.forEach((kind, i) => {
+            const art = getSprite(heroPortraitPath(kind));
+            if (!art) return;
+            const hero = image(content, art, UI.packHeroSize, UI.packHeroSize);
+            hero.setPosition((i - 1) * 215, i === 1 ? 70 : 40, 0);
+            this.packHeroes.push(hero);
+        });
 
-        this.overlayTitle = label(card, '', { size: 60, bold: true });
-        this.overlayTitle.node.setPosition(0, 120, 0);
+        this.overlayTitle = label(content, '', { size: 64, bold: true, outline: 6 });
+        this.overlayTitle.node.setPosition(0, -130, 0);
+        this.overlaySub = label(content, '', { size: 30, color: UI.colors.text, width: 600, outline: 3 });
+        this.overlaySub.node.setPosition(0, -195, 0);
 
-        this.overlaySub = label(card, '', { size: 28, color: UI.colors.textDim, width: 540 });
-        this.overlaySub.node.setPosition(0, 40, 0);
-
-        this.ctaButton = button(card, 460, 104, STRINGS.cta, () => this.cb.onCta(), {
-            radius: 28,
-            fontSize: 38,
+        this.ctaButton = button(content, 520, 130, STRINGS.cta, () => this.cb.onCta(), {
+            radius: 32,
+            fontSize: 52,
             color: 0x6fe08a,
             gradientTo: 0x2f9a4e,
             borderColor: UI.colors.accent,
             borderWidth: 5,
-            textColor: 0x0d2414,
+            // белый текст с тёмной обводкой: тёмно-зелёный на зелёной кнопке не читался
+            textColor: 0xffffff,
         });
-        this.ctaButton.node.setPosition(0, -110, 0);
+        this.ctaButton.node.setPosition(0, -330, 0);
+        const ctaLabel = this.ctaButton.node.getComponentInChildren(Label);
+        if (ctaLabel) {
+            const outline = ctaLabel.node.getComponent(LabelOutline) ?? ctaLabel.node.addComponent(LabelOutline);
+            outline.width = 5;
+            outline.color = hexColor(0x0d3a1c);
+        }
 
         const ctaSkin = getSprite(UI_IMAGES.ctaButton);
         if (ctaSkin) {
             // картинка ложится под текст кнопки, сама кнопка остаётся кликабельной;
             // 9-slice держит золотую окантовку одинаковой толщины на любой ширине
-            const skin = slicedImage(this.ctaButton.node, ctaSkin, 470, 112, 48);
+            const skin = slicedImage(this.ctaButton.node, ctaSkin, 540, 140, 48);
             skin.setSiblingIndex(0);
             const g = this.ctaButton.node.getComponent(Graphics);
             if (g) g.clear();
@@ -730,9 +769,10 @@ export class GameUI {
     }
 
     showResult(win: boolean, title: string, sub: string): void {
-        this.overlayTitle.string = title;
+        // пэкшот после победы — только логотип и кнопка, без лишнего текста
+        this.overlayTitle.string = win ? '' : title;
         this.overlayTitle.color = hexColor(win ? UI.colors.good : UI.colors.bad);
-        this.overlaySub.string = sub;
+        this.overlaySub.string = win ? '' : sub;
         this.overlay.active = true;
         this.ctaPulse = 0;
     }
@@ -768,7 +808,7 @@ export class GameUI {
             if (this.hudFrame) transform(this.hudFrame, 700, 104);
             redrawPanel(this.hudPanel.getComponent(Graphics)!, 700, 104, {
                 color: UI.colors.panel,
-                alpha: 225,
+                alpha: this.hudFrame ? 0 : 225,
                 radius: 24,
             });
         } else {
@@ -789,7 +829,7 @@ export class GameUI {
             if (this.hudFrame) transform(this.hudFrame, 640, 104);
             redrawPanel(this.hudPanel.getComponent(Graphics)!, 640, 104, {
                 color: UI.colors.panel,
-                alpha: 225,
+                alpha: this.hudFrame ? 0 : 225,
                 radius: 24,
             });
         }
@@ -807,8 +847,16 @@ export class GameUI {
         }
         if (this.overlay.active) {
             this.ctaPulse += dt * 3.2;
-            const s = 1 + Math.sin(this.ctaPulse) * 0.035;
+            const s = 1 + Math.sin(this.ctaPulse) * 0.05;
             this.ctaButton.node.setScale(s, s, 1);
+            if (this.raysNode) this.raysNode.angle += dt * UI.raysSpin;
+            this.packHeroes.forEach((hero, i) => {
+                const k = 1 + Math.sin(this.ctaPulse * 0.8 + i * 1.3) * 0.04;
+                hero.setScale(k, k, 1);
+            });
+            // в ландшафте экран ниже — пэкшот ужимаем, чтобы влез целиком
+            const fit = this.portrait ? 1 : 0.62;
+            this.overlayContent?.setScale(fit, fit, 1);
         }
     }
 
@@ -833,19 +881,6 @@ export class GameUI {
         };
         return check(this.shopPanel) || check(this.hudPanel) || this.overlay.active;
     }
-}
-
-function statLine(kind: UnitKind): string {
-    const s = UNITS[kind];
-    const dps = Math.round((s.damage / s.attackInterval) * 10) / 10;
-    const what =
-        kind === 'archer'
-            ? STRINGS.statSingle
-            : kind === 'bomber'
-              ? STRINGS.statSplash
-              : STRINGS.statSplashSlow;
-    return `${what}
-DPS ${dps} · range ${s.range}`;
 }
 
 /** Простые векторные пиктограммы — надёжнее эмодзи, которых может не быть в системном шрифте. */
