@@ -1,0 +1,138 @@
+{
+  "logoPlate": {
+    "prompt": "massive ornate fantasy game banner plate, thick carved dark stone slab with heavy gold frame, large red ruby gem at center top, wide horizontal shape filling the entire frame edge to edge, smooth empty polished middle, one single object only, nothing else in frame, absolutely no text no letters no symbols, flat vector mobile game UI, plain solid black background",
+    "width": 640,
+    "height": 160,
+    "out": "logo_plate",
+    "note": "подложка под надпись EVIL TOWER"
+  },
+  "ctaButton": {
+    "prompt": "wide rounded rectangular game button made of polished emerald stone, thick carved gold frame around it, bright reflection along the upper edge, flat empty middle, the button fills the whole frame, single object, absolutely no text no letters, flat vector mobile game interface art, plain solid black background",
+    "width": 560,
+    "height": 130,
+    "out": "cta_button",
+    "note": "плашка кнопки PLAY NOW"
+  },
+  "panelFrame": {
+    "prompt": "dark stone fantasy game panel frame, thick carved border with gold corner ornaments, completely hollow empty center, rectangular, no text, mobile game UI asset, centered, plain solid black background",
+    "width": 700,
+    "height": 340,
+    "out": "panel_frame",
+    "note": "рамка магазина"
+  },
+  "iconArcher": {
+    "prompt": "three wooden arrows with bright green feather fletching, arranged in a fan, sharp steel tips pointing up, single object on its own, no shield, no banner, no ribbon, no emblem, no text, flat vector game art, plain solid black background",
+    "width": 192,
+    "height": 192,
+    "out": "icon_archer",
+    "note": "иконка лучника в магазине"
+  },
+  "iconBomber": {
+    "prompt": "fantasy game skill icon, heavy grey boulder rock with orange impact cracks, bold readable silhouette, centered emblem, no text, flat vector mobile game icon, plain solid black background",
+    "width": 192,
+    "height": 192,
+    "out": "icon_bomber",
+    "note": "иконка метателя в магазине"
+  },
+  "iconMage": {
+    "prompt": "fantasy game skill icon, glowing blue crystal orb with lightning bolt, purple magic sparks, bold readable silhouette, centered emblem, no text, flat vector mobile game icon, plain solid black background",
+    "width": 192,
+    "height": 192,
+    "out": "icon_mage",
+    "note": "иконка мага в магазине"
+  },
+  "cardFrame": {
+    "prompt": "vertical fantasy game card background, dark navy blue carved stone slab with thin ornate gold border and small gold corner ornaments, softly lit smooth empty middle, rounded corners, the card fills the whole frame, single object, absolutely no text no letters no symbols, mobile game UI asset, plain solid white background",
+    "width": 412,
+    "height": 436,
+    "out": "card_frame",
+    "note": "фон карточки героя, 9-slice"
+  },
+  "heroArcher": {
+    "prompt": "cute stylized fantasy game character portrait, stout dwarf archer with a long white beard, brown leather armor with green cloth and small gold trims, a teal gem buckle, wooden bow over the shoulder, confident grin, close-up head and shoulders bust portrait cropped at the chest, no legs, no feet, no ground, no shadow, facing the viewer, chunky proportions, bold clean shapes, vibrant colors, soft rim light, mobile game hero card art, single character only, absolutely no text no letters no frame, plain solid white background",
+    "width": 256,
+    "height": 256,
+    "out": "hero_archer",
+    "note": "портрет лучника в карточке",
+    "keepLargest": true,
+    "bust": 0.62
+  },
+  "heroBomber": {
+    "prompt": "cute stylized fantasy game character portrait, stout dwarf warrior in shiny golden plate armor with dark navy blue cloth and brown leather straps, long white beard, small teal gems on the armor, holding a heavy round grey stone, determined grin, close-up head and shoulders bust portrait cropped at the chest, no legs, no feet, no ground, no shadow, facing the viewer, chunky proportions, bold clean shapes, vibrant colors, soft rim light, mobile game hero card art, single character only, absolutely no text no letters no frame, plain solid white background",
+    "width": 256,
+    "height": 256,
+    "out": "hero_bomber",
+    "note": "портрет метателя в карточке",
+    "keepLargest": true,
+    "bust": 0.62
+  },
+  "heroMage": {
+    "prompt": "cute stylized fantasy game character portrait, wise wizard in a long blue robe and tall pointed purple hat, glowing crystal orb staff, purple-blue palette, close-up head and shoulders bust portrait cropped at the chest, no legs, no feet, no ground, no shadow, facing the viewer, chunky proportions, bold clean shapes, vibrant colors, soft rim light, mobile game hero card art, single character only, absolutely no text no letters no frame, plain solid white background",
+    "width": 256,
+    "height": 256,
+    "out": "hero_mage",
+    "note": "портрет мага в карточке",
+    "keepLargest": true,
+    "bust": 0.62
+  },
+  "coin": {
+    "prompt": "single shiny gold coin icon floating, thick rim, embossed star in the middle, slight tilt, bright highlight, no stand, no base, no shadow, flat vector mobile game icon, one object only, no text, plain solid white background",
+    "width": 96,
+    "height": 96,
+    "out": "coin",
+    "note": "монетка у цены",
+    "keepLargest": true
+  },
+  "texGrass": {
+    "prompt": "seamless tileable stylized hand-painted grass texture, top-down view, lush short bright green grass with a few tiny clover leaves, soft painterly brush strokes, mobile game environment texture, even flat lighting, no shadows, no objects, fills the whole frame",
+    "width": 256,
+    "height": 256,
+    "out": "grass_top",
+    "dir": "Textures",
+    "tile": "xy",
+    "note": "текстура grass_top"
+  },
+  "texGrassSide": {
+    "prompt": "stylized hand-painted game block side texture, front view, thick band of bright green grass with a wavy overhanging edge along the top quarter, rich brown soil with small pebbles below, soft painterly style, even lighting, fills the whole frame",
+    "width": 256,
+    "height": 256,
+    "out": "grass_side",
+    "dir": "Textures",
+    "tile": "x",
+    "note": "текстура grass_side"
+  },
+  "texRoad": {
+    "prompt": "seamless tileable stylized hand-painted cobblestone path texture, top-down view, rounded warm beige and sand colored stones with thin dark gaps, soft painterly mobile game style, even flat lighting, fills the whole frame",
+    "width": 256,
+    "height": 256,
+    "out": "road_top",
+    "dir": "Textures",
+    "tile": "xy",
+    "note": "текстура road_top"
+  },
+  "texDirt": {
+    "prompt": "seamless tileable stylized hand-painted brown earth soil texture, front view, small pebbles and roots, soft painterly mobile game style, even flat lighting, fills the whole frame",
+    "width": 256,
+    "height": 256,
+    "out": "dirt",
+    "dir": "Textures",
+    "tile": "xy",
+    "note": "текстура dirt"
+  },
+  "texWater": {
+    "prompt": "seamless tileable stylized cartoon water surface texture, top-down view, clear turquoise blue water with soft lighter wave ripples and a few white sparkle highlights, painterly mobile game style, even lighting, fills the whole frame",
+    "width": 256,
+    "height": 256,
+    "out": "water",
+    "dir": "Textures",
+    "tile": "xy",
+    "note": "текстура water"
+  },
+  "hudPlate": {
+    "prompt": "wide horizontal fantasy game interface plaque, dark navy blue carved stone with thin ornate gold border and small gold corner ornaments, smooth empty middle, the plaque fills the whole frame, single object, absolutely no text no letters no symbols, mobile game UI asset, plain solid white background",
+    "width": 512,
+    "height": 128,
+    "out": "hud_plate",
+    "note": "плашка под значения HUD, 9-slice"
+  }
+}

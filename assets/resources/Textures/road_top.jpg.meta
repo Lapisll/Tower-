@@ -1,0 +1,37 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": false,
+  "uuid": "e5207d26-5344-4ca3-9f6e-e4e8755da029",
+  "files": [],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "e5207d26-5344-4ca3-9f6e-e4e8755da029@6c48a",
+      "displayName": "road_top",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "e5207d26-5344-4ca3-9f6e-e4e8755da029",
+        "visible": false
+      },
+      "ver": "1.0.22",
+      "imported": false,
+      "files": [],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "texture",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": false,
+    "redirect": "e5207d26-5344-4ca3-9f6e-e4e8755da029@6c48a"
+  }
+}

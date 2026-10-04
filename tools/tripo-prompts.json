@@ -1,0 +1,50 @@
+{
+  "archer": {
+    "prompt": "stylized low-poly fantasy archer, green hooded cloak, wooden bow in hand, standing idle pose, chunky proportions, flat vibrant colors, mobile game asset, clean readable silhouette",
+    "note": "юнит, высота ~1.6",
+    "faces": 2000,
+    "budget": "до 7 на экране"
+  },
+  "bomber": {
+    "prompt": "stylized low-poly fantasy rock thrower, stocky dwarf with leather apron, heavy stone in raised hand, orange and brown palette, standing idle, mobile game asset, clean readable silhouette",
+    "note": "юнит, высота ~1.7",
+    "faces": 2000,
+    "budget": "до 7 на экране"
+  },
+  "mage": {
+    "prompt": "stylized low-poly fantasy mage, long blue robe, tall pointed wizard hat, glowing staff with crystal orb, standing idle pose, purple-blue palette, mobile game asset, clean readable silhouette",
+    "note": "юнит, высота ~1.8",
+    "faces": 2200,
+    "budget": "до 7 на экране"
+  },
+  "grunt": {
+    "prompt": "stylized low-poly goblin grunt, small green creature, crude wooden club, hunched forward pose, red rag clothing, flat colors, mobile game asset",
+    "note": "враг, высота ~1.3",
+    "faces": 900,
+    "budget": "до 22 на экране одновременно"
+  },
+  "tank": {
+    "prompt": "stylized low-poly armored orc brute, heavy iron plate armor, horned helmet, massive shoulders, purple and dark steel palette, standing pose, mobile game asset",
+    "note": "жирный враг, высота ~1.9",
+    "faces": 1800,
+    "budget": "3 на экране"
+  },
+  "boss": {
+    "prompt": "stylized low-poly demon warlord boss, huge muscular silhouette, large curved horns, dark armor with glowing red cracks, menacing standing pose, mobile game asset",
+    "note": "босс, высота ~3.4",
+    "faces": 5000,
+    "budget": "1, крупный — его разглядывают"
+  },
+  "base": {
+    "prompt": "stylized low-poly fantasy castle keep, square stone tower with blue conical roof, four corner turrets, small banner, flat colors, mobile game asset",
+    "note": "замок игрока, высота ~4.0",
+    "faces": 2500,
+    "budget": "1, всегда в кадре"
+  },
+  "spawnGate": {
+    "prompt": "stylized low-poly dark stone portal gate, two carved pillars with lintel, cracked purple stone, ominous glow, mobile game asset",
+    "note": "ворота спавна, высота ~2.6",
+    "faces": 900,
+    "budget": "1, мелкий на заднем плане"
+  }
+}

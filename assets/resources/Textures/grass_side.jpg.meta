@@ -1,0 +1,37 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": false,
+  "uuid": "c15832a5-ac3c-4520-ae03-0d4489b71a2a",
+  "files": [],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "c15832a5-ac3c-4520-ae03-0d4489b71a2a@6c48a",
+      "displayName": "grass_side",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "c15832a5-ac3c-4520-ae03-0d4489b71a2a",
+        "visible": false
+      },
+      "ver": "1.0.22",
+      "imported": false,
+      "files": [],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "texture",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": false,
+    "redirect": "c15832a5-ac3c-4520-ae03-0d4489b71a2a@6c48a"
+  }
+}

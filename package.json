@@ -1,0 +1,20 @@
+{
+  "name": "Tower",
+  "uuid": "dfc78d3b-0d16-4434-b508-b0f50723e646",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "scripts": {
+    "balance": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tools/ts-hook.mjs tools/balance.ts",
+    "slots": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tools/ts-hook.mjs tools/slots.ts",
+    "coverage": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tools/ts-hook.mjs tools/coverage.ts",
+    "timing": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tools/ts-hook.mjs tools/timing.ts",
+    "tripo": "node tools/tripo.mjs",
+    "shrink": "node tools/shrink-textures.mjs",
+    "ui-art": "node tools/ui-art.mjs",
+    "fix-rig": "node tools/fix-rig.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.4"
+  }
+}

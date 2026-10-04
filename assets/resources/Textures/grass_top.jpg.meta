@@ -1,0 +1,37 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": false,
+  "uuid": "9739a0e3-06f6-468c-809b-f9e90574d258",
+  "files": [],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "9739a0e3-06f6-468c-809b-f9e90574d258@6c48a",
+      "displayName": "grass_top",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "linear",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "9739a0e3-06f6-468c-809b-f9e90574d258",
+        "visible": false
+      },
+      "ver": "1.0.22",
+      "imported": false,
+      "files": [],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "texture",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": false,
+    "redirect": "9739a0e3-06f6-468c-809b-f9e90574d258@6c48a"
+  }
+}
